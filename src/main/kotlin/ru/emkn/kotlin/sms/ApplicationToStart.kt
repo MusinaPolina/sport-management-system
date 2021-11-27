@@ -1,0 +1,62 @@
+package ru.emkn.kotlin.sms
+
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
+import java.io.Reader
+import java.io.Writer
+import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
+private fun readApplication(reader: Reader) : List<Participant> {
+    TODO()
+}
+
+private fun drawLots(list: List<Participant>) : List<Int> {
+    val shuffle = list.shuffled()
+    val startNumber = lastNumber + 1
+    shuffle.forEachIndexed { index, participant ->
+        lastNumber++
+        numberToParticipant[lastNumber] = participant
+        numberToStart[lastNumber] = Duration.ofMinutes(index.toLong())
+    }
+    return (startNumber..lastNumber).toList()
+}
+
+private fun printGroup(group: String, numbers: List<Int>, csvPrinter: CSVPrinter) {
+    val startTime = LocalTime.of(12, 0, 0)
+    csvPrinter.printRecord(group)
+    csvPrinter.printRecord("Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Время старта")
+    numbers.forEach { number ->
+        val participant = numberToParticipant[number]
+        val time = numberToStart[number]
+        require(participant != null) {
+            logger.error { "wrong number $number" }
+        }
+        require(time != null) {
+            logger.error { "wrong number $number" }
+        }
+        csvPrinter.printRecord(number, participant.lastName, participant.firstName,
+            participant.yearOfBirth, participant.sportsCategory, participant.team,
+            (startTime + time).format(DateTimeFormatter.ISO_TIME),
+        )
+    }
+    return
+}
+
+private val numberToParticipant : MutableMap<Int, Participant> = mutableMapOf()
+private val numberToStart : MutableMap<Int, Duration> = mutableMapOf()
+private var lastNumber = 100
+
+fun applicationsToStart (readers: List<Reader>, writer: Writer) {
+    val participants = readers.flatMap { reader -> readApplication(reader) }
+    val groups = participants.groupBy { it.group }
+    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
+    groups.forEach { (group, list) ->
+        val numbers = drawLots(list)
+        printGroup(group, numbers, csvPrinter)
+    }
+    csvPrinter.flush()
+    csvPrinter.close()
+    return
+}
