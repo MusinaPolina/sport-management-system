@@ -72,3 +72,5 @@ distTmp/
 outTmp/
 /test.output
 /kotlin-native/dist
+/.idea/uiDesigner.xml
+main.log
