@@ -68,6 +68,10 @@ private val numberToStart : MutableMap<Int, Duration> = mutableMapOf()
 private var lastNumber = 100
 
 fun applicationsToStart (readers: List<Reader>, writer: Writer) {
+    lastNumber = 100
+    numberToParticipant.clear()
+    numberToStart.clear()
+
     val participants = readers.flatMap { reader -> readApplication(reader) }
     val groups = participants.groupBy { it.group }
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
