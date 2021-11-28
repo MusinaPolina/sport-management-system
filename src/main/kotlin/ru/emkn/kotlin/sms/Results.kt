@@ -47,7 +47,7 @@ fun startTimeParse(reader: Reader) {
     csvParser.forEach { record ->
         when {
             record.toList().size == 1 -> groupName = record[0]
-            record[0] == "Номер" -> null
+            record[0] == "Номер" -> Unit
             else -> addParticipant(record.toList(), groupName)
         }
     }
@@ -72,8 +72,8 @@ fun courseParse(reader: Reader) {
         .withTrim())
     val name = csvParser.headerNames.first()
     //val coursesNumbers = csvParser.headerNames.drop(1)
-    csvParser.forEach {
-        courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it != "" }.map {
+    csvParser.forEach { it ->
+        courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it1 -> it1 != "" }.map {
             require(it.toIntOrNull() != null) { logger.error { "Check point $it is not Int" } }
             it.toInt()
         }
