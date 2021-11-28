@@ -122,8 +122,8 @@ fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
 
 fun splitsParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
-    val start = TODO("from properties")
-    val finish = TODO("from properties")
+    val start = config.start
+    val finish = config.finish
     csvParser.forEach { addSplitRecord(it.toList(), start, finish) }
 }
 
@@ -173,9 +173,9 @@ fun resultsTable(writer: Writer) {
     }
 }
 
-fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
-    val groupsReader = TODO("from properties")
-    val coursesReader = TODO("from properties")
+fun results(startTimesReader: Reader, splitsReader: Reader) {
+    val groupsReader = config.groups
+    val coursesReader = config.courses
     startTimeParse(startTimesReader)
     groupsParse(groupsReader)
     courseParse(coursesReader)
