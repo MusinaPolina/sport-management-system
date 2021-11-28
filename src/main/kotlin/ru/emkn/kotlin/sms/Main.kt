@@ -4,5 +4,5 @@ import mu.KotlinLogging
 val logger = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
-    teamResults()
+    TODO()
 }
