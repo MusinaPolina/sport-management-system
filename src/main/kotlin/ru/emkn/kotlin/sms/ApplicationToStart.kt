@@ -14,9 +14,18 @@ private fun readApplication(reader: Reader) : List<Participant> {
         .withHeader("Группа", "Фамилия", "Имя", "Г.р.", "Разр."))
     val team = csvParser.first().get(0)
     logger.debug { "reading application for team $team" }
-    val participants = csvParser.drop(1).map { csvRecord ->
-        require(csvRecord.get("Г.р.").toIntOrNull() != null) {
+    if (csvParser.first().joinToString(",") != "Группа,Фамилия,Имя,Г.р.,Разр.") {
+        logger.error { "Wrong application format $team, line 2" }
+        throw WrongApplication(team, 2)
+    }
+    val participants = csvParser.map { csvRecord ->
+        if (csvRecord.size() < csvParser.headerNames.size) {
+            logger.error { "Application $team, line ${csvRecord.recordNumber}, not enough arguments" }
+            throw WrongApplication(team, csvRecord.recordNumber)
+        }
+        if (csvRecord.get("Г.р.").toIntOrNull() == null) {
             logger.error { "Г.р. isn't a number: ${csvRecord.get("Г.р.")}" }
+            throw WrongApplication(team, csvRecord.recordNumber)
         }
         Participant(
             csvRecord.get("Имя"),
