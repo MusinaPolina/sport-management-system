@@ -4,6 +4,9 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.time.Duration
+
+data class Result(val time: Duration, val withdrawn: Boolean)
 
 fun teamResults(link: String = "sample-data/results.csv") {
     val reader = Files.newBufferedReader(Paths.get(link))
