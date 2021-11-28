@@ -8,13 +8,13 @@ import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-val participantStart = mutableMapOf<Int, LocalTime>()
+private val participantStart = mutableMapOf<Int, LocalTime>()
 
-val courseByGroup = mutableMapOf<String, String>()
+private val courseByGroup = mutableMapOf<String, String>()
 
-val courseCheckPoints = mutableMapOf<String, List<Int>>()
+private val courseCheckPoints = mutableMapOf<String, List<Int>>()
 
-fun addParticipant(record: List<String>, groupName: String) {
+private fun addParticipant(record: List<String>, groupName: String) {
     val number = getNumberByRecord(record)
     val participant = getParticipantByRecord(record, groupName)
     val startTime = getStartTimeByRecord(record)
@@ -25,7 +25,7 @@ fun addParticipant(record: List<String>, groupName: String) {
 private const val NUMBERINDEX = 0
 private const val STARTTIMEINDEX = 6
 
-fun recordLocalTime(time: String): LocalTime {
+private fun recordLocalTime(time: String): LocalTime {
     return LocalTime.parse(time)
 }
 
@@ -41,7 +41,7 @@ private fun getNumberByRecord(record: List<String>): Int {
     return record[NUMBERINDEX].toInt()
 }
 
-fun startTimeParse(reader: Reader) {
+private fun startTimeParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     var groupName = ""
     csvParser.forEach { record ->
@@ -53,7 +53,7 @@ fun startTimeParse(reader: Reader) {
     }
 }
 
-fun groupsParse(reader: Reader) {
+private fun groupsParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withFirstRecordAsHeader()
         .withIgnoreHeaderCase()
@@ -65,16 +65,16 @@ fun groupsParse(reader: Reader) {
     }
 }
 
-fun courseParse(reader: Reader) {
+private fun courseParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withFirstRecordAsHeader()
         .withIgnoreHeaderCase()
         .withTrim())
     val name = csvParser.headerNames.first()
-    //val coursesNumbers = csvParser.headerNames.drop(1)
     csvParser.forEach { it ->
         courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it1 -> it1 != "" }.map {
-            require(it.toIntOrNull() != null) { logger.error { "Check point $it is not Int" } }
+
+            //val coursesNumbers = csvParser.headerNames.drop(1)       require(it.toIntOrNull() != null) { logger.error { "Check point $it is not Int" } }
             it.toInt()
         }
     }
@@ -89,7 +89,7 @@ private fun getSplitNumberByRecord(record: List<String>): Int {
     return recordNumber.toInt()
 }
 
-fun updateLeader(number: Int) {
+private fun updateLeader(number: Int) {
     require(participantByNumber[number] != null) { logger.error { "participant $number is null" } }
     val groupName = participantByNumber[number]?.group!!
     if (!groupLeaders.containsKey(groupName) || resultByNumber[number]!! < resultByNumber[groupLeaders[groupName]!!]) {
@@ -97,7 +97,7 @@ fun updateLeader(number: Int) {
     }
 }
 
-fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
+private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
     if (record.size <= 1) {
         logger.error { "not enough arguments in split record" }
         throw WrongSplit()
@@ -141,18 +141,18 @@ fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
     }
 }
 
-fun splitsParse(reader: Reader) {
+private fun splitsParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     val start = config.start
     val finish = config.finish
     csvParser.forEach { addSplitRecord(it.toList(), start, finish) }
 }
 
-fun getGap(start: Duration, finish: Duration): Duration {
+private fun getGap(start: Duration, finish: Duration): Duration {
     return finish - start
 }
 
-fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
+private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
     val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
         .toList().sortedBy { it.second }.sortedBy { it.second == null }
 
@@ -176,7 +176,7 @@ fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
     }
 }
 
-fun resultsTable(csvPrinter: CSVPrinter) {
+private fun resultsTable(csvPrinter: CSVPrinter) {
     csvPrinter.printRecord("Протокол результатов.")
     courseByGroup.forEach { (groupName, _) ->
         csvPrinter.printRecord(groupName)
@@ -186,6 +186,13 @@ fun resultsTable(csvPrinter: CSVPrinter) {
 }
 
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
+    participantStart.clear()
+    courseByGroup.clear()
+    courseCheckPoints.clear()
+    participantByNumber.clear()
+    resultByNumber.clear()
+    groupLeaders.clear()
+
     val groupsReader = config.groups
     val coursesReader = config.courses
     startTimeParse(startTimesReader)
