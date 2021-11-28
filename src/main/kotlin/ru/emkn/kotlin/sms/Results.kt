@@ -6,6 +6,7 @@ import java.io.Reader
 import java.io.Writer
 import java.time.Duration
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 val participantStart = mutableMapOf<Int, LocalTime>()
 
@@ -45,7 +46,7 @@ fun startTimeParse(reader: Reader) {
     var groupName = ""
     csvParser.forEach { record ->
         when {
-            record[1] == "" -> groupName = record[0]
+            record.toList().size == 1 -> groupName = record[0]
             record[0] == "Номер" -> null
             else -> addParticipant(record.toList(), groupName)
         }
@@ -73,9 +74,7 @@ fun courseParse(reader: Reader) {
     //val coursesNumbers = csvParser.headerNames.drop(1)
     csvParser.forEach {
         courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it != "" }.map {
-            require(it.toIntOrNull() != null) {
-                logger.error { "Check point $it is not Int" }
-            }
+            require(it.toIntOrNull() != null) { logger.error { "Check point $it is not Int" } }
             it.toInt()
         }
     }
@@ -91,7 +90,7 @@ private fun getSplitNumberByRecord(record: List<String>): Int {
 }
 
 fun updateLeader(number: Int) {
-    require(participantByNumber[number] == null) { "participant $number is null" }
+    require(participantByNumber[number] != null) { logger.error { "participant $number is null" } }
     val groupName = participantByNumber[number]?.group!!
     if (!groupLeaders.containsKey(groupName) || resultByNumber[number]!! < resultByNumber[groupLeaders[groupName]!!]) {
         groupLeaders[groupName] = number
@@ -100,7 +99,8 @@ fun updateLeader(number: Int) {
 
 fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
     if (record.size <= 1) {
-        TODO("Write exception")
+        logger.error { "not enough arguments in split record" }
+        throw WrongSplit()
     }
     val number = getSplitNumberByRecord(record)
     val splits = record.drop(1).filter { it != "" }.chunked(2)
@@ -113,8 +113,12 @@ fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
         throw AbsentOfStartFinishRecord(number, "start")
     }
     splits.forEachIndexed { index, courseTime ->
-        val course = courseTime[0].toInt() //TODO("Int exception")
-        val time = recordLocalTime(courseTime[1]) //TODO("time check exception")
+        if (courseTime[0].toIntOrNull() == null) {
+            logger.error { "Number of check point should be Int in add splitRecord" }
+            throw IsNotInt(courseTime[0])
+        }
+        val course = courseTime[0].toInt()
+        val time = recordLocalTime(courseTime[1])
         val groupName = participantByNumber[number]?.group
         when (course) {
             start -> {
@@ -128,7 +132,7 @@ fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
                 updateLeader(number)
             }
             else -> {
-                if (course != courseCheckPoints[groupName]?.get(index - 1)) {
+                if (course != courseCheckPoints[courseByGroup[groupName]]?.get(index - 1)) {
                     logger.error { "$number wrong check point" }
                     throw WrongCheckPoint(number)
                 }
@@ -154,7 +158,7 @@ fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
     groupResults.forEachIndexed { index, (number, _) ->
         val participant = participantByNumber[number]
-        require(participant != null) { "participant $number is null" }
+        require(participant != null) { logger.error { "participant $number is null" } }
 
         val res = resultByNumber[number]
 
@@ -163,10 +167,12 @@ fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
         val gap = if (res == null || place == 1) null else
             getGap(resultByNumber[groupLeaders[groupName]]!!, resultByNumber[number]!!)
 
-        val localTimeGap = LocalTime.of(0, 0) + gap
+        val localTimeGap = if (gap == null) null else (LocalTime.of(0, 0) + gap).format(DateTimeFormatter.ISO_TIME)
 
         csvPrinter.printRecord(index + 1, number, participant.lastName, participant.firstName,
-            participant.yearOfBirth, participant.sportsCategory, participant.team, res, place, '+', localTimeGap)
+            participant.yearOfBirth, participant.sportsCategory, participant.team,
+            (LocalTime.of(0, 0) + res).format(DateTimeFormatter.ISO_TIME),
+            place, localTimeGap)
     }
 }
 
@@ -188,4 +194,6 @@ fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     splitsParse(splitsReader)
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
     resultsTable(csvPrinter)
+    csvPrinter.flush()
+    csvPrinter.close()
 }
