@@ -1,6 +1,8 @@
 package ru.emkn.kotlin.sms
 
 import mu.KotlinLogging
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
 import java.io.Reader
 import java.io.Writer
 import java.nio.file.Files
@@ -32,6 +34,8 @@ fun makeWriter(pathStr: String) : Writer {
     }
     return Files.newBufferedWriter(path)
 }
+
+fun makeStandardWriter() = BufferedWriter(OutputStreamWriter(System.out))
 
 fun main(args: Array<String>) {
     TODO()
