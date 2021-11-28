@@ -1,9 +1,13 @@
 package ru.emkn.kotlin.sms
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVPrinter
 import java.io.Reader
+import java.io.Writer
 import java.time.Duration
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlin.reflect.jvm.internal.impl.types.WrappedType
 
 val participantStart = mutableMapOf<Int, LocalTime>()
 
@@ -22,8 +26,12 @@ fun addParticipant(record: List<String>, groupName: String) {
 private const val NUMBERINDEX = 0
 private const val STARTTIMEINDEX = 6
 
+fun recordLocalTime(time: String): LocalTime {
+    return TODO()
+}
+
 private fun getStartTimeByRecord(record: List<String>): LocalTime {
-    return TODO("string to local time")
+    return recordLocalTime(record[STARTTIMEINDEX])
 }
 
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
@@ -98,8 +106,17 @@ fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
         logger.error { "$number participant hasn't start record" }
         throw AbsentOfStartFinishRecord(number, "start")
     }
-    splits.forEach {
-
+    splits.forEachIndexed { index, courseTime ->
+        val course = courseTime[0].toInt() //TODO("Int exception")
+        val time = recordLocalTime(courseTime[1]) //TODO("time check exception")
+        when (course) {
+            start -> TODO("start time equals")
+            finish -> {
+                TODO("add finish time")
+                resultByNumber[number] = TODO("time to Duration") //duration.between
+            }
+            else -> TODO("check course is on it way")
+        }
     }
 }
 
@@ -110,11 +127,59 @@ fun splitsParse(reader: Reader) {
     csvParser.forEach { addSplitRecord(it.toList(), start, finish) }
 }
 
-fun results(startTimesReader: Reader, splitsReader: Reader) {
+fun csvParticipant(participant: Participant): String {
+    TODO()
+   /* val startTime = LocalTime.of(12, 0, 0)
+    csvPrinter.printRecord(group)
+    csvPrinter.printRecord("Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Время старта")
+    logger.debug { "printing group $group" }
+    numbers.forEach { number ->
+        val participant = numberToParticipant[number]
+        val time = numberToStart[number]
+        require(participant != null) {
+            logger.error { "wrong number $number" }
+        }
+        require(time != null) {
+            logger.error { "wrong number $number" }
+        }
+        csvPrinter.printRecord(number, participant.lastName, participant.firstName,
+            participant.yearOfBirth, participant.sportsCategory, participant.team,
+            (startTime + time).format(DateTimeFormatter.ISO_TIME),
+        )
+    }*/
+}
+
+fun csvResult(result: Duration?, groupName: String) {
+    TODO()
+}
+
+fun addGroupResults(groupName: String, writer: Writer) {
+    val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
+        .toList().sortedBy { it.second }.sortedBy { it == null }
+
+    groupResults.forEachIndexed { index, (number, result) ->
+        writer.write("${index + 1},")
+        writer.write("${csvParticipant(participantByNumber[number]!!)},")
+        writer.write("${csvResult(result, groupName)}")
+        writer.write("\n")
+    }
+}
+
+fun resultsTable(writer: Writer) {
+    writer.write("Протокол результатов.,,,,,,,,,\n")
+    courseByGroup.forEach { (groupName, _) ->
+        writer.write("$groupName,,,,,,,,,\n№ п/п,Номер,Фамилия,Имя,Г.р.,Разр.,Команда,Результат,Место,Отставание\n")
+        addGroupResults(groupName, writer)
+    }
+}
+
+fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     val groupsReader = TODO("from properties")
     val coursesReader = TODO("from properties")
     startTimeParse(startTimesReader)
     groupsParse(groupsReader)
     courseParse(coursesReader)
     splitsParse(splitsReader)
+    resultsTable(writer)
+    TODO("groupleaders")
 }
