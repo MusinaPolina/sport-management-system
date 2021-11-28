@@ -25,7 +25,11 @@ class Results : CliktCommand() {
     private val start by argument()
     private val splits by argument()
     override fun run() {
-        TODO("Not yet implemented")
+        results(
+            makeReader(start),
+            makeReader(splits),
+            output?.let { makeWriter(it) } ?: makeStandardWriter()
+        )
     }
 }
 
