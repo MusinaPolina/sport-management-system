@@ -7,9 +7,9 @@ class TestTeamResults {
 
     @Test
     fun checkComputePoints() {
-        assertEquals(0.toDouble(), computePoints(null, Duration.ofSeconds(100)))
-        assertEquals(0.toDouble(), computePoints(Duration.ofSeconds(120), Duration.ofSeconds(50)))
-        assertEquals(50.toDouble(), computePoints(Duration.ofSeconds(150), Duration.ofSeconds(100)))
+        assertEquals(0, computePoints(null, Duration.ofSeconds(100)))
+        assertEquals(0, computePoints(Duration.ofSeconds(120), Duration.ofSeconds(50)))
+        assertEquals(50, computePoints(Duration.ofSeconds(150), Duration.ofSeconds(100)))
     }
 
     @Test

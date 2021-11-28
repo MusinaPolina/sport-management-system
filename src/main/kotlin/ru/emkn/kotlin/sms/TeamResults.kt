@@ -8,10 +8,6 @@ import java.io.Writer
 import java.time.Duration
 import kotlin.math.max
 
-val participantByNumber = mutableMapOf<Int, Participant>()
-val resultByNumber = mutableMapOf<Int, Duration?>()
-val groupLeaders = mutableMapOf<String, Int>()
-
 private fun addRecord(record: List<String>, groupName: String) {
     logger.debug { "add a $groupName group's record: $record " }
     val number = getNumberByRecord(record)
@@ -67,6 +63,9 @@ fun parseInput(reader: Reader) {
 }
 
 fun teamResults(reader: Reader, writer: Writer) {
+    resultByNumber.clear()
+    groupLeaders.clear()
+    participantByNumber.clear()
     parseInput(reader)
     val teamPoints = computeTeamResults().toList().sortedByDescending { it.second }
     printTeamPoint(teamPoints, writer)
