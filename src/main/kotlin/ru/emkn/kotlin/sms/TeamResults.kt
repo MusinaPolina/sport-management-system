@@ -2,6 +2,7 @@ package ru.emkn.kotlin.sms
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVPrinter
 import java.io.Reader
 import java.io.Writer
 import java.time.Duration
@@ -67,14 +68,18 @@ fun parseInput(reader: Reader) {
 
 fun teamResults(reader: Reader, writer: Writer) {
     parseInput(reader)
-    val teamPoints = computeTeamResults()
+    val teamPoints = computeTeamResults().toList().sortedByDescending { it.second }
     printTeamPoint(teamPoints, writer)
 }
 
-private fun printTeamPoint(teamPoints: Map<String, Double>, writer: Writer) {
-    teamPoints.forEach { (team, points) ->
-        writer.write("$team $points")
+private fun printTeamPoint(teamPoints: List<Pair<String, Double>>, writer: Writer) {
+    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT
+        .withHeader("Место", "Команда", "Результат"))
+    teamPoints.forEachIndexed { index, (team, points) ->
+        csvPrinter.printRecord(index + 1, team, points)
     }
+    csvPrinter.flush()
+    csvPrinter.close()
 }
 
 private fun computeTeamResults(): MutableMap<String, Double> {
