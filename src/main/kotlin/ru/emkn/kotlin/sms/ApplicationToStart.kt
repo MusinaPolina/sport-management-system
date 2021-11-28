@@ -44,8 +44,8 @@ private fun drawLots(list: List<Participant>) : List<Int> {
     val startNumber = lastNumber + 1
     shuffle.forEachIndexed { index, participant ->
         lastNumber++
-        numberToParticipant[lastNumber] = participant
-        numberToStart[lastNumber] = Duration.ofMinutes(index.toLong())
+        participantByNumber[lastNumber] = participant
+        startTimeByNumber[lastNumber] = Duration.ofMinutes(index.toLong())
     }
     return (startNumber..lastNumber).toList()
 }
@@ -56,8 +56,8 @@ private fun printGroup(group: String, numbers: List<Int>, csvPrinter: CSVPrinter
     csvPrinter.printRecord("Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Время старта")
     logger.debug { "printing group $group" }
     numbers.forEach { number ->
-        val participant = numberToParticipant[number]
-        val time = numberToStart[number]
+        val participant = participantByNumber[number]
+        val time = startTimeByNumber[number]
         require(participant != null) {
             logger.error { "wrong number $number" }
         }
@@ -71,15 +71,13 @@ private fun printGroup(group: String, numbers: List<Int>, csvPrinter: CSVPrinter
     }
     return
 }
-
-private val numberToParticipant : MutableMap<Int, Participant> = mutableMapOf()
-private val numberToStart : MutableMap<Int, Duration> = mutableMapOf()
+private val startTimeByNumber : MutableMap<Int, Duration> = mutableMapOf()
 private var lastNumber = 100
 
 fun applicationsToStart (readers: List<Reader>, writer: Writer) {
     lastNumber = 100
-    numberToParticipant.clear()
-    numberToStart.clear()
+    participantByNumber.clear()
+    startTimeByNumber.clear()
 
     val participants = readers.flatMap { reader -> readApplication(reader) }
     val groups = participants.groupBy { it.group }
