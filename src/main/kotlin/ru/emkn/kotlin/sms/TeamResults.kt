@@ -86,7 +86,9 @@ private fun computeTeamResults(): MutableMap<String, Int> {
     val teamPoints = mutableMapOf<String, Int>()
     resultByNumber.forEach { (number, result) ->
         val participant = participantByNumber[number]
-        require(participant != null) { "participant is null" }
+        require(participant != null) {
+            logger.error { "participant is null" }
+        }
 
         val groupLeaderResult = resultByNumber[groupLeaders[participant.group]]
 
@@ -103,7 +105,9 @@ fun computePoints(result: Duration?, groupLeaderResult: Duration?) : Int {
     return if (result == null)
         0
     else {
-        require(groupLeaderResult != null) { "leader result is null" }
+        require(groupLeaderResult != null) {
+            logger.error { "leader result is null" }
+        }
         max(0, (200 - 100 * result.toSeconds()/groupLeaderResult.toSeconds()).toInt())
     }
 }
