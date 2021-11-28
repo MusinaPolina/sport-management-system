@@ -59,7 +59,7 @@ fun parseInput(reader: Reader) {
     var groupName = ""
     csvParser.forEach { record ->
         when {
-            record[0] == "Протокол результатов." || record[0] == "№ п/п" -> null
+            record[0] == "Протокол результатов." || record[0] == "№ п/п" -> Unit
             record[1] == "" -> groupName = record[0]
             else -> addRecord(record.toList(), groupName)
         }
@@ -90,9 +90,9 @@ private fun computeTeamResults(): MutableMap<String, Double> {
 
         val groupLeaderResult = resultByNumber[groupLeaders[participant.group]]
 
-        logger.debug { "${number} in team ${participant.team}" }
+        logger.debug { "$number in team ${participant.team}" }
         val points = computePoints(result, groupLeaderResult)
-        logger.debug { "${number} in team ${participant.team} points is $points" }
+        logger.debug { "$number in team ${participant.team} points is $points" }
 
         teamPoints[participant.team] = (teamPoints[participant.team] ?: 0.toDouble()) + points
     }
