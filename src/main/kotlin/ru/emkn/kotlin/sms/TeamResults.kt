@@ -2,14 +2,11 @@ package ru.emkn.kotlin.sms
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVPrinter
 import java.io.Reader
 import java.io.Writer
 import java.time.Duration
 import kotlin.math.max
-
-val participantByNumber = mutableMapOf<Int, Participant>()
-val resultByNumber = mutableMapOf<Int, Duration?>()
-val groupLeaders = mutableMapOf<String, Int>()
 
 private fun addRecord(record: List<String>, groupName: String) {
     logger.debug { "add a $groupName group's record: $record " }
@@ -58,7 +55,7 @@ fun parseInput(reader: Reader) {
     var groupName = ""
     csvParser.forEach { record ->
         when {
-            record[0] == "Протокол результатов." || record[0] == "№ п/п" -> null
+            record[0] == "Протокол результатов." || record[0] == "№ п/п" -> Unit
             record[1] == "" -> groupName = record[0]
             else -> addRecord(record.toList(), groupName)
         }
@@ -66,39 +63,50 @@ fun parseInput(reader: Reader) {
 }
 
 fun teamResults(reader: Reader, writer: Writer) {
+    resultByNumber.clear()
+    groupLeaders.clear()
+    participantByNumber.clear()
     parseInput(reader)
-    val teamPoints = computeTeamResults()
+    val teamPoints = computeTeamResults().toList().sortedByDescending { it.second }
     printTeamPoint(teamPoints, writer)
 }
 
-private fun printTeamPoint(teamPoints: Map<String, Double>, writer: Writer) {
-    teamPoints.forEach { (team, points) ->
-        writer.write("$team $points")
+private fun printTeamPoint(teamPoints: List<Pair<String, Int>>, writer: Writer) {
+    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT
+        .withHeader("Место", "Команда", "Результат"))
+    teamPoints.forEachIndexed { index, (team, points) ->
+        csvPrinter.printRecord(index + 1, team, points)
     }
+    csvPrinter.flush()
+    csvPrinter.close()
 }
 
-private fun computeTeamResults(): MutableMap<String, Double> {
-    val teamPoints = mutableMapOf<String, Double>()
+private fun computeTeamResults(): MutableMap<String, Int> {
+    val teamPoints = mutableMapOf<String, Int>()
     resultByNumber.forEach { (number, result) ->
         val participant = participantByNumber[number]
-        require(participant != null) { "participant is null" }
+        require(participant != null) {
+            logger.error { "participant is null" }
+        }
 
         val groupLeaderResult = resultByNumber[groupLeaders[participant.group]]
 
-        logger.debug { "${number} in team ${participant.team}" }
+        logger.debug { "$number in team ${participant.team}" }
         val points = computePoints(result, groupLeaderResult)
-        logger.debug { "${number} in team ${participant.team} points is $points" }
+        logger.debug { "$number in team ${participant.team} points is $points" }
 
-        teamPoints[participant.team] = (teamPoints[participant.team] ?: 0.toDouble()) + points
+        teamPoints[participant.team] = (teamPoints[participant.team] ?: 0) + points
     }
     return teamPoints
 }
 
-fun computePoints(result: Duration?, groupLeaderResult: Duration?) : Double {
+fun computePoints(result: Duration?, groupLeaderResult: Duration?) : Int {
     return if (result == null)
-        0.toDouble()
+        0
     else {
-        require(groupLeaderResult != null) { "leader result is null" }
-        max(0.toDouble(), 100 * (2 - result.toSeconds().toDouble()/groupLeaderResult.toSeconds().toDouble()))
+        require(groupLeaderResult != null) {
+            logger.error { "leader result is null" }
+        }
+        max(0, (200 - 100 * result.toSeconds()/groupLeaderResult.toSeconds()).toInt())
     }
 }

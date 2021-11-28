@@ -17,3 +17,6 @@ class FalseStart(number: Int) : MyException("$number false start")
 class WrongCheckPoint(number: Int) : MyException("$number wrong check point")
 
 class WrongSplit() : MyException("wrong split")
+
+class WrongApplication(team: String, line: Long) :
+    MyException("Team $team submitted an incorrect application, line $line")

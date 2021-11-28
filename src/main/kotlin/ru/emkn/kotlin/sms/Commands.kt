@@ -13,6 +13,7 @@ class StartTime : CliktCommand() {
     private val output by option("-o", "--output", help="output file")
     private val applications by argument().multiple()
     override fun run() {
+        logger.debug { "running start-time command" }
         applicationsToStart(
             applications.map { makeReader(it) },
             output?.let { makeWriter(it) } ?: makeStandardWriter()
@@ -25,6 +26,7 @@ class Results : CliktCommand() {
     private val start by argument()
     private val splits by argument()
     override fun run() {
+        logger.debug { "running results command" }
         results(
             makeReader(start),
             makeReader(splits),
@@ -37,6 +39,7 @@ class Teams : CliktCommand() {
     private val output by option("-o", "--output", help="output file")
     private val results by argument()
     override fun run() {
+        logger.debug { "running teams command" }
         teamResults(
             makeReader(results),
             output?.let { makeWriter(it) } ?: makeStandardWriter()
