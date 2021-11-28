@@ -9,22 +9,22 @@ internal class TestApplicationToStart {
         applicationFile.writeText("""
             Team
             Группа,Фамилия,Имя,Г.р.,Разр.
-            group1,LastN1,FirstN1,2000,1
-            group2,LastN2,FirstN2,2001,2
-            group3,LastN3,FirstN3,2002,3
+            Ж10,LastN1,FirstN1,2000,1
+            Ж12,LastN2,FirstN2,2001,2
+            Ж14,LastN3,FirstN3,2002,3
         """.trimIndent())
         val application = applicationFile.bufferedReader()
         val startFile = File.createTempFile("start", ".csv")
         val start = startFile.bufferedWriter()
         applicationsToStart(listOf(application), start)
         assertEquals("""
-            group1
+            Ж10
             Номер,Фамилия,Имя,Г.р.,Разр,Команда,Время старта
             101,LastN1,FirstN1,2000,1,Team,12:00:00
-            group2
+            Ж12
             Номер,Фамилия,Имя,Г.р.,Разр,Команда,Время старта
             102,LastN2,FirstN2,2001,2,Team,12:00:00
-            group3
+            Ж14
             Номер,Фамилия,Имя,Г.р.,Разр,Команда,Время старта
             103,LastN3,FirstN3,2002,3,Team,12:00:00
         """.trimIndent().replace("\n", "\r\n") + "\r\n",
@@ -37,9 +37,9 @@ internal class TestApplicationToStart {
         applicationFile.writeText("""
             Team
             Группа,Фамилия,Имя,Г.р.,Разр.
-            group,LastN1,FirstN1,2000,1
-            group,LastN2,FirstN2,2001,2
-            group,LastN3,FirstN3,2002,3
+            Ж10,LastN1,FirstN1,2000,1
+            Ж10,LastN2,FirstN2,2001,2
+            Ж10,LastN3,FirstN3,2002,3
         """.trimIndent())
         val application = applicationFile.bufferedReader()
         val startFile = File.createTempFile("start", ".csv")
@@ -47,7 +47,7 @@ internal class TestApplicationToStart {
         applicationsToStart(listOf(application), start)
         val text = startFile.readLines()
         assertEquals(5, text.size)
-        assertEquals("group", text.first())
+        assertEquals("Ж10", text.first())
         assertEquals("Номер,Фамилия,Имя,Г.р.,Разр,Команда,Время старта", text[1])
 
         val lines = text.drop(2).map {it.split(",")}

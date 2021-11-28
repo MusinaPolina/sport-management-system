@@ -27,6 +27,10 @@ private fun readApplication(reader: Reader) : List<Participant> {
             logger.error { "Г.р. isn't a number: ${csvRecord.get("Г.р.")}" }
             throw WrongApplication(team, csvRecord.recordNumber)
         }
+        if (!config.courseByGroup.keys.contains(csvRecord.get("Группа"))) {
+            logger.error { "Application $team, line ${csvRecord.recordNumber}, wrong group" }
+            throw WrongApplication(team, csvRecord.recordNumber)
+        }
         Participant(
             csvRecord.get("Имя"),
             csvRecord.get("Фамилия"),

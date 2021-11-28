@@ -10,10 +10,6 @@ import java.time.format.DateTimeFormatter
 
 private val participantStart = mutableMapOf<Int, LocalTime>()
 
-private val courseByGroup = mutableMapOf<String, String>()
-
-private val courseCheckPoints = mutableMapOf<String, List<Int>>()
-
 private fun addParticipant(record: List<String>, groupName: String) {
     val number = getNumberByRecord(record)
     val participant = getParticipantByRecord(record, groupName)
@@ -49,33 +45,6 @@ private fun startTimeParse(reader: Reader) {
             record.toList().size == 1 -> groupName = record[0]
             record[0] == "Номер" -> Unit
             else -> addParticipant(record.toList(), groupName)
-        }
-    }
-}
-
-private fun groupsParse(reader: Reader) {
-    val csvParser = CSVParser(reader, CSVFormat.DEFAULT
-        .withFirstRecordAsHeader()
-        .withIgnoreHeaderCase()
-        .withTrim())
-    val name = csvParser.headerNames[0]
-    val course = csvParser.headerNames[1]
-    csvParser.forEach {
-        courseByGroup[it.get(name)] = it.get(course)
-    }
-}
-
-private fun courseParse(reader: Reader) {
-    val csvParser = CSVParser(reader, CSVFormat.DEFAULT
-        .withFirstRecordAsHeader()
-        .withIgnoreHeaderCase()
-        .withTrim())
-    val name = csvParser.headerNames.first()
-    csvParser.forEach { it ->
-        courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it1 -> it1 != "" }.map {
-
-            //val coursesNumbers = csvParser.headerNames.drop(1)       require(it.toIntOrNull() != null) { logger.error { "Check point $it is not Int" } }
-            it.toInt()
         }
     }
 }
@@ -132,7 +101,7 @@ private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
                 updateLeader(number)
             }
             else -> {
-                if (course != courseCheckPoints[courseByGroup[groupName]]?.get(index - 1)) {
+                if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
                     logger.error { "$number wrong check point" }
                     throw WrongCheckPoint(number)
                 }
@@ -178,7 +147,7 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
 private fun resultsTable(csvPrinter: CSVPrinter) {
     csvPrinter.printRecord("Протокол результатов.")
-    courseByGroup.forEach { (groupName, _) ->
+    config.courseByGroup.forEach { (groupName, _) ->
         csvPrinter.printRecord(groupName)
         csvPrinter.printRecord("№ п/п","Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Результат", "Место", "Отставание")
         addGroupResults(groupName, csvPrinter)
@@ -187,17 +156,11 @@ private fun resultsTable(csvPrinter: CSVPrinter) {
 
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     participantStart.clear()
-    courseByGroup.clear()
-    courseCheckPoints.clear()
     participantByNumber.clear()
     resultByNumber.clear()
     groupLeaders.clear()
 
-    val groupsReader = config.groups
-    val coursesReader = config.courses
     startTimeParse(startTimesReader)
-    groupsParse(groupsReader)
-    courseParse(coursesReader)
     splitsParse(splitsReader)
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
     resultsTable(csvPrinter)
