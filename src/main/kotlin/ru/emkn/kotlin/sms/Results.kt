@@ -7,6 +7,10 @@ import java.time.LocalTime
 
 val participantStart = mutableMapOf<Int, LocalTime>()
 
+val courseByGroup = mutableMapOf<String, String>()
+
+val courseCheckPoints = mutableMapOf<String, List<Int>>()
+
 fun addParticipant(record: List<String>, groupName: String) {
     val number = getNumberByRecord(record)
     val participant = getParticipantByRecord(record, groupName)
@@ -42,8 +46,39 @@ fun startTimeParse(reader: Reader) {
     }
 }
 
+fun groupsParse(reader: Reader) {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT
+        .withFirstRecordAsHeader()
+        .withIgnoreHeaderCase()
+        .withTrim())
+    val name = csvParser.headerNames[0]
+    val course = csvParser.headerNames[1]
+    csvParser.forEach {
+        courseByGroup[it.get(name)] = it.get(course)
+    }
+}
+
+fun courseParse(reader: Reader) {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT
+        .withFirstRecordAsHeader()
+        .withIgnoreHeaderCase()
+        .withTrim())
+    val name = csvParser.headerNames.first()
+    val coursesNumbers = csvParser.headerNames.drop(1)
+    csvParser.forEach {
+        courseCheckPoints[it.get(name)] = it.toList().drop(1).filter { it != "" }.map {
+            require(it.toIntOrNull() != null) {
+                logger.error { "Check point $it is not Int" }
+            }
+            it.toInt()
+        }
+    }
+}
+
 fun results(startTimesReader: Reader, splitsReader: Reader) {
     val groupsReader = TODO()
     val coursesReader = TODO()
     startTimeParse(startTimesReader)
+    groupsParse(groupsReader)
+    courseParse(coursesReader)
 }
