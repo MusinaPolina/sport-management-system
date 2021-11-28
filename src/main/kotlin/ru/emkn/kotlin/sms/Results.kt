@@ -23,7 +23,7 @@ private const val NUMBERINDEX = 0
 private const val STARTTIMEINDEX = 6
 
 private fun getStartTimeByRecord(record: List<String>): LocalTime {
-    return TODO()
+    return TODO("string to local time")
 }
 
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
@@ -75,10 +75,46 @@ fun courseParse(reader: Reader) {
     }
 }
 
+private fun getSplitNumberByRecord(record: List<String>): Int {
+    val recordNumber = record[NUMBERINDEX]
+    if (recordNumber.toIntOrNull() == null) {
+        logger.error { "record number $recordNumber is not Int" }
+        throw IsNotInt(recordNumber)
+    }
+    return recordNumber.toInt()
+}
+
+fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
+    if (record.size <= 1) {
+        TODO("Write exception")
+    }
+    val number = getSplitNumberByRecord(record)
+    val splits = record.drop(1).filter { it != "" }.chunked(2)
+    if (splits.last().size == 1 || splits.last().first().toIntOrNull() != finish) {
+        logger.error { "$number participant hasn't finish record" }
+        throw AbsentOfStartFinishRecord(number, "finish")
+    }
+    if (splits.first().first().toIntOrNull() != start) {
+        logger.error { "$number participant hasn't start record" }
+        throw AbsentOfStartFinishRecord(number, "start")
+    }
+    splits.forEach {
+
+    }
+}
+
+fun splitsParse(reader: Reader) {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
+    val start = TODO("from properties")
+    val finish = TODO("from properties")
+    csvParser.forEach { addSplitRecord(it.toList(), start, finish) }
+}
+
 fun results(startTimesReader: Reader, splitsReader: Reader) {
-    val groupsReader = TODO()
-    val coursesReader = TODO()
+    val groupsReader = TODO("from properties")
+    val coursesReader = TODO("from properties")
     startTimeParse(startTimesReader)
     groupsParse(groupsReader)
     courseParse(coursesReader)
+    splitsParse(splitsReader)
 }
