@@ -11,4 +11,10 @@ val participantByNumber = mutableMapOf<Int, Participant>()
 val resultByNumber = mutableMapOf<Int, Duration?>()
 val groupLeaders = mutableMapOf<String, Int>()
 
-fun main(args: Array<String>) = Command().subcommands(StartTime(), Results(), Teams()).main(args)
+fun main(args: Array<String>) {
+    try {
+        Command().subcommands(StartTime(), Results(), Teams()).main(args)
+    } catch (exc: MyException) {
+        println("Error: ${exc.message}")
+    }
+}
