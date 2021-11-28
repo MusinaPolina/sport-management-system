@@ -72,7 +72,7 @@ fun teamResults(reader: Reader, writer: Writer) {
     printTeamPoint(teamPoints, writer)
 }
 
-private fun printTeamPoint(teamPoints: List<Pair<String, Double>>, writer: Writer) {
+private fun printTeamPoint(teamPoints: List<Pair<String, Int>>, writer: Writer) {
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT
         .withHeader("Место", "Команда", "Результат"))
     teamPoints.forEachIndexed { index, (team, points) ->
@@ -82,8 +82,8 @@ private fun printTeamPoint(teamPoints: List<Pair<String, Double>>, writer: Write
     csvPrinter.close()
 }
 
-private fun computeTeamResults(): MutableMap<String, Double> {
-    val teamPoints = mutableMapOf<String, Double>()
+private fun computeTeamResults(): MutableMap<String, Int> {
+    val teamPoints = mutableMapOf<String, Int>()
     resultByNumber.forEach { (number, result) ->
         val participant = participantByNumber[number]
         require(participant != null) { "participant is null" }
@@ -94,16 +94,16 @@ private fun computeTeamResults(): MutableMap<String, Double> {
         val points = computePoints(result, groupLeaderResult)
         logger.debug { "$number in team ${participant.team} points is $points" }
 
-        teamPoints[participant.team] = (teamPoints[participant.team] ?: 0.toDouble()) + points
+        teamPoints[participant.team] = (teamPoints[participant.team] ?: 0) + points
     }
     return teamPoints
 }
 
-fun computePoints(result: Duration?, groupLeaderResult: Duration?) : Double {
+fun computePoints(result: Duration?, groupLeaderResult: Duration?) : Int {
     return if (result == null)
-        0.toDouble()
+        0
     else {
         require(groupLeaderResult != null) { "leader result is null" }
-        max(0.toDouble(), 100 * (2 - result.toSeconds().toDouble()/groupLeaderResult.toSeconds().toDouble()))
+        max(0, (200 - 100 * result.toSeconds()/groupLeaderResult.toSeconds()).toInt())
     }
 }
