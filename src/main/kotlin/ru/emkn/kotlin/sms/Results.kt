@@ -155,10 +155,12 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
         val res = resultByNumber[number]
 
-        val place = if (res == null) null else index + 1
+        val place = if (res == null) null else index + 1 //mustn't be a place if participant doesn't have a result
 
-        val gap = if (res == null || place == 1) null else
-            getGap(resultByNumber[groupLeaders[groupName]]!!, resultByNumber[number]!!)
+        val leaderResult = resultByNumber[groupLeaders[groupName]]
+        require(leaderResult != null) { logger.error { "$number group leader is absent" }}
+        val gap = if (res == null || place == 1) null //mustn't be a gap if participant doesn't have a result or has a first place
+                  else getGap(leaderResult, res)
 
         val localTimeGap = if (gap == null) null else (LocalTime.of(0, 0) + gap).format(DateTimeFormatter.ISO_TIME)
 
