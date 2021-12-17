@@ -165,7 +165,11 @@ private fun getGap(start: Duration, finish: Duration): Duration {
 private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
     val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
         .toList().sortedBy { it.second }.sortedBy { it.second == null }
-
+    if (groupResults.isEmpty()) {
+        return
+    }
+    csvPrinter.printRecord(groupName)
+    csvPrinter.printRecord("№ п/п","Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Результат", "Место", "Отставание")
     groupResults.forEachIndexed { index, (number, _) ->
         val participant = participantByNumber[number]
         require(participant != null) { logger.error { "participant $number is null" } }
@@ -191,8 +195,6 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 private fun resultsTable(csvPrinter: CSVPrinter) {
     csvPrinter.printRecord("Протокол результатов.")
     config.courseByGroup.forEach { (groupName, _) ->
-        csvPrinter.printRecord(groupName)
-        csvPrinter.printRecord("№ п/п","Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Результат", "Место", "Отставание")
         addGroupResults(groupName, csvPrinter)
     }
 }
