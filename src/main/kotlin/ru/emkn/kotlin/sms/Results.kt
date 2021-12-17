@@ -66,13 +66,19 @@ private fun updateLeader(number: Int) {
     }
 }
 
-private fun checkSplitStartFinish(number:Int, splits: List<List<String>>, start: Int, finish: Int) {
+private fun checkSplitStartFinish(splits: List<List<String>>, start: Int, finish: Int): Boolean {
+    if (splits.isEmpty()) {
+        return true
+    }
     if (splits.last().size == 1 || splits.last().first().toIntOrNull() != finish) {
-        splitSplitRecordStartFinishExeption(number, "finish")
+        return true
+        //splitSplitRecordStartFinishExeption(number, "finish")
     }
     if (splits.first().first().toIntOrNull() != start) {
-        splitSplitRecordStartFinishExeption(number, "start")
+        return true
+        //splitSplitRecordStartFinishExeption(number, "start")
     }
+    return false
 }
 
 private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) {
@@ -80,27 +86,34 @@ private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) 
     throw AbsentOfStartFinishRecord(number, exception)
 }
 
-private fun addSplits(number:Int, splits: List<List<String>>, start: Int, finish: Int) {
+private fun addSplits(number:Int, splits: List<List<String>>, start: Int, finish: Int, withdrawn: Boolean): Boolean {
+    if (withdrawn) return true
     splits.forEachIndexed { index, courseTime ->
         if (courseTime[0].toIntOrNull() == null) {
             logger.error { "Number of check point should be Int in add splitRecord" }
-            throw IsNotInt(courseTime[0])
+            return true
+            //throw IsNotInt(courseTime[0])
         }
         val course = courseTime[0].toInt()
         val time = recordLocalTime(courseTime[1])
-        checkCourses(number, course, time, index, start, finish)
+        if (checkCourses(number, course, time, index, start, finish)) {
+            return true
+        }
     }
+    return false
 }
 
 private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
-    if (record.size <= 1) {
+    if (record.size < 1) {
         logger.error { "not enough arguments in split record" }
         throw WrongSplit()
     }
     val number = getSplitNumberByRecord(record)
     val splits = record.drop(1).filter { it != "" }.chunked(2)
-    checkSplitStartFinish(number, splits, start, finish)
-    addSplits(number, splits, start, finish)
+    val withdrawn = checkSplitStartFinish(splits, start, finish)
+    if (addSplits(number, splits, start, finish, withdrawn)) {
+        resultByNumber[number] = null
+    }
 }
 
 private fun addSplitFinish(number: Int, time: LocalTime) {
@@ -109,21 +122,26 @@ private fun addSplitFinish(number: Int, time: LocalTime) {
 }
 
 
-private fun checkCourses(course: Int, groupName: String?, index: Int, number: Int) {
+private fun checkCourses(course: Int, groupName: String?, index: Int, number: Int): Boolean {
     if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
         logger.error { "$number wrong check point" }
-        throw WrongCheckPoint(number)
+        return true
+        //throw WrongCheckPoint(number)
     }
+    return false
 }
 
 
-private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int) {
+private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int): Boolean {
     val groupName = participantByNumber[number]?.group
     when (course) {
         start -> checkSplitStart(time, number)
         finish -> addSplitFinish(number, time)
-        else -> checkCourses(course, groupName, index, number)
+        else -> {
+            if (checkCourses(course, groupName, index, number)) return true
+        }
     }
+    return false
 }
 
 private fun checkSplitStart(time: LocalTime, number: Int) {
@@ -165,7 +183,7 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
         csvPrinter.printRecord(index + 1, number, participant.lastName, participant.firstName,
             participant.yearOfBirth, participant.sportsCategory, participant.team,
-            (LocalTime.of(0, 0) + res).format(DateTimeFormatter.ISO_TIME),
+            if (res != null) (LocalTime.of(0, 0) + res).format(DateTimeFormatter.ISO_TIME) else  WITHDRAWN,
             place, localTimeGap)
     }
 }
