@@ -72,19 +72,19 @@ private fun checkSplitStartFinish(splits: List<List<String>>, start: Int, finish
     }
     if (splits.last().size == 1 || splits.last().first().toIntOrNull() != finish) {
         return true
-        //splitSplitRecordStartFinishExeption(number, "finish")
+        //splitSplitRecordStartFinishException(number, "finish")
     }
     if (splits.first().first().toIntOrNull() != start) {
         return true
-        //splitSplitRecordStartFinishExeption(number, "start")
+        //splitSplitRecordStartFinishException(number, "start")
     }
     return false
 }
 
-private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) {
+/*private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) {
     logger.error { "$number participant hasn't $exception record" }
     throw AbsentOfStartFinishRecord(number, exception)
-}
+}*/
 
 private fun addSplits(number:Int, splits: List<List<String>>, start: Int, finish: Int, withdrawn: Boolean): Boolean {
     if (withdrawn) return true
@@ -104,7 +104,7 @@ private fun addSplits(number:Int, splits: List<List<String>>, start: Int, finish
 }
 
 private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
-    if (record.size < 1) {
+    if (record.isEmpty()) {
         logger.error { "not enough arguments in split record" }
         throw WrongSplit()
     }
