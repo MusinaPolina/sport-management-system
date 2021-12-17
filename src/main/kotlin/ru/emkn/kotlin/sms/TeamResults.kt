@@ -20,7 +20,7 @@ private fun addRecord(record: List<String>, groupName: String) {
 
 private const val NUMBERINDEX = 1
 private const val RESULTINDEX = 7
-private const val WITHDRAWN = "cнят"
+const val WITHDRAWN = "снят"
 private const val PLACEINDEX = 8
 
 private fun addLeader(groupName: String, record: List<String>, number: Int) {
@@ -56,7 +56,7 @@ fun parseInput(reader: Reader) {
     csvParser.forEach { record ->
         when {
             record[0] == "Протокол результатов." || record[0] == "№ п/п" -> Unit
-            record[1] == "" -> groupName = record[0]
+            record.size() == 1 || record[1] == "" -> groupName = record[0]
             else -> addRecord(record.toList(), groupName)
         }
     }
@@ -72,7 +72,7 @@ fun teamResults(reader: Reader, writer: Writer) {
 }
 
 private fun printTeamPoint(teamPoints: List<Pair<String, Int>>, writer: Writer) {
-    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT
+    val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT.withTrim()
         .withHeader("Место", "Команда", "Результат"))
     teamPoints.forEachIndexed { index, (team, points) ->
         csvPrinter.printRecord(index + 1, team, points)
