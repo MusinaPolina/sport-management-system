@@ -20,6 +20,8 @@ class FalseStart(number: Int) : MyException("$number false start")
 
 //class WrongCheckPoint(number: Int) : MyException("$number wrong check point")
 
+class WrongTime : MyException("Time is wrong")
+
 class WrongSplit : MyException("wrong split")
 
 class WrongApplication(team: String, line: Long) :

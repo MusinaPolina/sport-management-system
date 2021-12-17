@@ -30,7 +30,8 @@ private fun getStartTimeByRecord(record: List<String>): LocalTime {
 }
 
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
-    return Participant(record[2], record[1], record[3].toInt(), record[4], groupName, record[5])
+    val team = addTeam(record[5])
+    return Participant(record[2], record[1], record[3].toInt(), record[4], groupName, team)
 }
 
 private fun getNumberByRecord(record: List<String>): Int {
@@ -61,8 +62,9 @@ private fun getSplitNumberByRecord(record: List<String>): Int {
 private fun updateLeader(number: Int) {
     require(participantByNumber[number] != null) { logger.error { "participant $number is null" } }
     val groupName = participantByNumber[number]?.group!!
-    if (!groupLeaders.containsKey(groupName) || resultByNumber[number]!! < resultByNumber[groupLeaders[groupName]!!]) {
-        groupLeaders[groupName] = number
+    if (!groupLeaders.containsKey(groupName.name) ||
+        resultByNumber[number]!! < resultByNumber[groupLeaders[groupName.name]!!]) {
+        groupLeaders[groupName.name] = number
     }
 }
 
@@ -134,7 +136,7 @@ private fun checkCourses(course: Int, groupName: String, index: Int, number: Int
 
 
 private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int): Boolean {
-    val groupName = participantByNumber[number]?.group ?: return true
+    val groupName = participantByNumber[number]?.group?.name ?: return true
     when (course) {
         start -> checkSplitStart(time, number)
         finish -> addSplitFinish(number, time)
@@ -164,7 +166,8 @@ private fun getGap(start: Duration, finish: Duration): Duration {
 }
 
 private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
-    val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
+    val groupResults = resultByNumber.filter { (number, _) ->
+        participantByNumber[number]?.group?.name == groupName }
         .toList().sortedBy { it.second }.sortedBy { it.second == null }
     if (groupResults.isEmpty()) {
         return

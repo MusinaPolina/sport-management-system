@@ -4,7 +4,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.Reader
 
-data class Group(val name: String, val course: Course)
+data class Group(val name: String, val course: Course, var leaderResult: ParticipantResult? = null)
 
 fun getCourse(groupName: String): Course {
     return groups.find { group -> group.name == groupName }?.course ?: throw AbsentOfGroup(groupName)

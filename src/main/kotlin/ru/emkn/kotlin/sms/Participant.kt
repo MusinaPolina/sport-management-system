@@ -1,10 +1,16 @@
 package ru.emkn.kotlin.sms
 
-data class Participant (
+class Participant (
     val firstName: String,
     val lastName: String,
     val yearOfBirth: Int,
     val sportsCategory: String,
-    val group: String,
-    val team: String,
-)
+    groupName: String,
+    val team: Team,
+) {
+    val group: Group
+    init {
+        group = groups.find { it.name == groupName } ?: throw AbsentOfGroup(groupName)
+        team.participants.add(this)
+    }
+}

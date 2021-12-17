@@ -1,5 +1,12 @@
 package ru.emkn.kotlin.sms
 
-class Team(val name: String, val participants: List<Participant>)
+class Team(val name: String, val participants: MutableList<Participant>)
 
-typealias Teams = List<Team>
+val teams = mutableListOf<Team>()
+
+fun addTeam(name: String): Team {
+    return teams.find { it.name == name } ?: run {
+        teams.add(Team(name, mutableListOf()))
+        return teams.last()
+    }
+}

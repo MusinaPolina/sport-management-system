@@ -12,24 +12,24 @@ import java.time.format.DateTimeFormatter
 private fun readApplication(reader: Reader) : Team {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withHeader("Группа", "Фамилия", "Имя", "Г.р.", "Разр."))
-    val team = csvParser.first().get(0)
+    val team = addTeam(csvParser.first().get(0))
     logger.debug { "reading application for team $team" }
     if (csvParser.first().joinToString(",") != "Группа,Фамилия,Имя,Г.р.,Разр.") {
         logger.error { "Wrong application format $team, line 2" }
-        throw WrongApplication(team, 2)
+        throw WrongApplication(team.name, 2)
     }
-    val participants = csvParser.map { csvRecord ->
+    csvParser.forEach { csvRecord ->
         if (csvRecord.size() < csvParser.headerNames.size) {
             logger.error { "Application $team, line ${csvRecord.recordNumber}, not enough arguments" }
-            throw WrongApplication(team, csvRecord.recordNumber)
+            throw WrongApplication(team.name, csvRecord.recordNumber)
         }
         if (csvRecord.get("Г.р.").toIntOrNull() == null) {
             logger.error { "Г.р. isn't a number: ${csvRecord.get("Г.р.")}" }
-            throw WrongApplication(team, csvRecord.recordNumber)
+            throw WrongApplication(team.name, csvRecord.recordNumber)
         }
         if (groups.find { it.name == csvRecord.get("Группа")} == null) {
             logger.error { "Application $team, line ${csvRecord.recordNumber}, wrong group" }
-            throw WrongApplication(team, csvRecord.recordNumber)
+            throw WrongApplication(team.name, csvRecord.recordNumber)
         }
         Participant(
             csvRecord.get("Имя"),
@@ -40,7 +40,7 @@ private fun readApplication(reader: Reader) : Team {
             team,
         )
     }
-    return Team(team, participants)
+    return team
 }
 
 private fun drawLots(list: List<Participant>) : List<Int> {
@@ -89,7 +89,7 @@ fun applicationsToStart (readers: List<Reader>, writer: Writer) {
     groups.forEach { (group, list) ->
         logger.debug { "drawing lots for $group" }
         val numbers = drawLots(list)
-        printGroup(group, numbers, csvPrinter)
+        printGroup(group.name, numbers, csvPrinter)
     }
     csvPrinter.flush()
     csvPrinter.close()
