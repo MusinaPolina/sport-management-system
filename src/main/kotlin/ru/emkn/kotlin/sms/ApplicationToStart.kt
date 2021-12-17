@@ -27,7 +27,7 @@ private fun readApplication(reader: Reader) : Team {
             logger.error { "Г.р. isn't a number: ${csvRecord.get("Г.р.")}" }
             throw WrongApplication(team, csvRecord.recordNumber)
         }
-        if (!config.courseByGroup.keys.contains(csvRecord.get("Группа"))) {
+        if (groups.find { it.name == csvRecord.get("Группа")} == null) {
             logger.error { "Application $team, line ${csvRecord.recordNumber}, wrong group" }
             throw WrongApplication(team, csvRecord.recordNumber)
         }

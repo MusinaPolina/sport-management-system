@@ -122,8 +122,9 @@ private fun addSplitFinish(number: Int, time: LocalTime) {
 }
 
 
-private fun checkCourses(course: Int, groupName: String?, index: Int, number: Int): Boolean {
-    if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
+private fun checkCourses(course: Int, groupName: String, index: Int, number: Int): Boolean {
+    if (course != getCourse(groupName).checkPoints[index - 1]) {
+    //if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
         logger.error { "$number wrong check point" }
         return true
         //throw WrongCheckPoint(number)
@@ -133,7 +134,7 @@ private fun checkCourses(course: Int, groupName: String?, index: Int, number: In
 
 
 private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int): Boolean {
-    val groupName = participantByNumber[number]?.group
+    val groupName = participantByNumber[number]?.group ?: return true
     when (course) {
         start -> checkSplitStart(time, number)
         finish -> addSplitFinish(number, time)
@@ -194,8 +195,8 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
 private fun resultsTable(csvPrinter: CSVPrinter) {
     csvPrinter.printRecord("Протокол результатов.")
-    config.courseByGroup.forEach { (groupName, _) ->
-        addGroupResults(groupName, csvPrinter)
+    groups.forEach { group ->
+        addGroupResults(group.name, csvPrinter)
     }
 }
 

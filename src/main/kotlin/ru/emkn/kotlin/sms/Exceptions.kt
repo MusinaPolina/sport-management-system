@@ -6,7 +6,9 @@ class InputFileNotFound(path: String) : MyException("File $path doesn't exist")
 
 class CantReadInputFile(path: String) : MyException("File $path isn't readable")
 
-class AbsentOfCourse(group: String, course: String) : MyException("course $course for group $group is not declared")
+class AbsentOfCourse(group: String, course: String) : MyException("course: $course for group: $group is not declared")
+
+class AbsentOfGroup(group: String) : MyException("group: $group is not declared")
 
 class CantWriteInOutputFile(path: String) : MyException("$path isn't a writable file")
 
