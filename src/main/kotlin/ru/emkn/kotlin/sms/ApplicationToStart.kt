@@ -9,7 +9,7 @@ import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-private fun readApplication(reader: Reader) : List<Participant> {
+private fun readApplication(reader: Reader) : Team {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withHeader("Группа", "Фамилия", "Имя", "Г.р.", "Разр."))
     val team = csvParser.first().get(0)
@@ -40,7 +40,7 @@ private fun readApplication(reader: Reader) : List<Participant> {
             team,
         )
     }
-    return participants
+    return Team(team, participants)
 }
 
 private fun drawLots(list: List<Participant>) : List<Int> {
@@ -83,8 +83,8 @@ fun applicationsToStart (readers: List<Reader>, writer: Writer) {
     participantByNumber.clear()
     startTimeByNumber.clear()
 
-    val participants = readers.flatMap { reader -> readApplication(reader) }
-    val groups = participants.groupBy { it.group }
+    val participants = readers.flatMap { reader -> readApplication(reader).participants }
+    val groups =participants.groupBy { it.group }
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
     groups.forEach { (group, list) ->
         logger.debug { "drawing lots for $group" }

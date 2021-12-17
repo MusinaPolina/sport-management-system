@@ -35,7 +35,7 @@ class Results : CliktCommand() {
     }
 }
 
-class Teams : CliktCommand() {
+class TeamsResults : CliktCommand() {
     private val output by option("-o", "--output", help="output file")
     private val results by argument()
     override fun run() {

@@ -144,7 +144,6 @@ private fun getGap(start: Duration, finish: Duration): Duration {
     return finish - start
 }
 
-//TODO()
 private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
     val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
         .toList().sortedBy { it.second }.sortedBy { it.second == null }

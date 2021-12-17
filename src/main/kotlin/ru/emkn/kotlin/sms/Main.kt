@@ -13,7 +13,7 @@ val groupLeaders = mutableMapOf<String, Int>()
 
 fun main(args: Array<String>) {
     try {
-        Command().subcommands(StartTime(), Results(), Teams()).main(args)
+        Command().subcommands(StartTime(), Results(), TeamsResults()).main(args)
     } catch (exc: MyException) {
         println("Error: ${exc.message}")
     }
