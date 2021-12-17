@@ -9,7 +9,8 @@ val logger = KotlinLogging.logger {}
 val participantByNumber = mutableMapOf<Int, Participant>()
 val resultByNumber = mutableMapOf<Int, Duration?>()
 val groupLeaders = mutableMapOf<String, Int>()
-val groups = initGroups()
+val groups = config.groups.toMutableList()
+val courses = config.courses.toMutableList()
 
 fun main(args: Array<String>) {
     try {

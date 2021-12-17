@@ -21,39 +21,43 @@ data class Config(
     val start: Int,
     val finish: Int,
     val event: Reader,
-    val courseByGroup: Map<String, String>,
-    val courseCheckPoints: Map<String, List<Int>>,
+    val courses: List<Course>,
+    val groups: List<Group>,
 )
 
 val config = Config(
     rawConfig.start,
     rawConfig.finish,
     makeReader(rawConfig.event),
-    groupsParse(makeReader(rawConfig.groups)),
     courseParse(makeReader(rawConfig.courses)),
+    groupsParse(makeReader(rawConfig.groups)),
 )
 
-private fun groupsParse(reader: Reader) : Map<String, String> {
+private fun groupsParse(reader: Reader) : List<Group> {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withFirstRecordAsHeader()
         .withIgnoreHeaderCase()
         .withTrim())
     val name = csvParser.headerNames[0]
     val course = csvParser.headerNames[1]
-    return csvParser.associate {
-        it.get(name) to it.get(course)
+    return csvParser.map { record ->
+        Group(record.get(name),
+            config.courses.find { current -> current.name == record.get(course) } ?:
+            throw AbsentOfCourse(record.get(name), record.get(course))
+        )
     }
 }
 
-private fun courseParse(reader: Reader) : Map<String, List<Int>> {
+private fun courseParse(reader: Reader) : List<Course> {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT
         .withFirstRecordAsHeader()
         .withIgnoreHeaderCase()
         .withTrim())
     val name = csvParser.headerNames.first()
-    return csvParser.associate {
-        it.get(name) to it.toList().drop(1).filter { it1 -> it1 != "" }.map { it1 ->
+    return csvParser.map { Course(
+        it.get(name),
+        it.toList().drop(1).filter { it1 -> it1 != "" }.map { it1 ->
             it1.toInt()
-        }
+        })
     }
 }
