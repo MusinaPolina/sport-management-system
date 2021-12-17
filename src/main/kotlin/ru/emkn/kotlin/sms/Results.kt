@@ -31,7 +31,7 @@ private fun getStartTimeByRecord(record: List<String>): LocalTime {
 
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
     val team = addTeam(record[5])
-    return Participant(record[2], record[1], record[3].toInt(), record[4], groupName, team)
+    return Participant(record[1].toInt(), record[2], record[1], record[3].toInt(), record[4], groupName, team)
 }
 
 private fun getNumberByRecord(record: List<String>): Int {

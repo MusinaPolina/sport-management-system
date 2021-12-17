@@ -49,7 +49,7 @@ private fun getResultByRecord(record: List<String>): ParticipantResult? {
 
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
     val team = addTeam(record[6])
-    return Participant(record[3], record[2], record[4].toInt(), record[5], groupName, team)
+    return Participant(record[2].toInt(), record[3], record[2], record[4].toInt(), record[5], groupName, team)
 }
 
 private fun getNumberByRecord(record: List<String>): Int {
@@ -69,9 +69,6 @@ private fun parseResultsProtocol(reader: Reader) {
 }
 
 fun teamResults(reader: Reader, writer: Writer) {
-    resultByNumber.clear()
-    groupLeaders.clear()
-    participantByNumber.clear()
     parseResultsProtocol(reader)
     RowTeamsResults().exportCSV(writer)
 }

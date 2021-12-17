@@ -32,6 +32,7 @@ private fun readApplication(reader: Reader) : Team {
             throw WrongApplication(team.name, csvRecord.recordNumber)
         }
         Participant(
+            lastNumber++,
             csvRecord.get("Имя"),
             csvRecord.get("Фамилия"),
             csvRecord.get("Г.р.").toInt(),
@@ -45,13 +46,12 @@ private fun readApplication(reader: Reader) : Team {
 
 private fun drawLots(list: List<Participant>) : List<Int> {
     val shuffle = list.shuffled()
-    val startNumber = lastNumber + 1
+    val startNumber = list.first().number
     shuffle.forEachIndexed { index, participant ->
-        lastNumber++
-        participantByNumber[lastNumber] = participant
-        startTimeByNumber[lastNumber] = Duration.ofMinutes(index.toLong())
+        participantByNumber[participant.number] = participant
+        startTimeByNumber[participant.number] = Duration.ofMinutes(index.toLong())
     }
-    return (startNumber..lastNumber).toList()
+    return (startNumber..(list.last().number)).toList()
 }
 
 private fun printGroup(group: String, numbers: List<Int>, csvPrinter: CSVPrinter) {
@@ -84,7 +84,7 @@ fun applicationsToStart (readers: List<Reader>, writer: Writer) {
     startTimeByNumber.clear()
 
     val participants = readers.flatMap { reader -> readApplication(reader).participants }
-    val groups =participants.groupBy { it.group }
+    val groups = participants.groupBy { it.group }
     val csvPrinter = CSVPrinter(writer, CSVFormat.DEFAULT)
     groups.forEach { (group, list) ->
         logger.debug { "drawing lots for $group" }

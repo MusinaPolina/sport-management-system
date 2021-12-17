@@ -1,6 +1,7 @@
 package ru.emkn.kotlin.sms
 
 class Participant (
+    val number: Int,
     val firstName: String,
     val lastName: String,
     val yearOfBirth: Int,
