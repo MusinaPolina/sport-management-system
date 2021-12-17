@@ -66,21 +66,21 @@ private fun updateLeader(number: Int) {
     }
 }
 
-private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
-    if (record.size <= 1) {
-        logger.error { "not enough arguments in split record" }
-        throw WrongSplit()
-    }
-    val number = getSplitNumberByRecord(record)
-    val splits = record.drop(1).filter { it != "" }.chunked(2)
+private fun checkSplitStartFinish(number:Int, splits: List<List<String>>, start: Int, finish: Int) {
     if (splits.last().size == 1 || splits.last().first().toIntOrNull() != finish) {
-        logger.error { "$number participant hasn't finish record" }
-        throw AbsentOfStartFinishRecord(number, "finish")
+        splitSplitRecordStartFinishExeption(number, "finish")
     }
     if (splits.first().first().toIntOrNull() != start) {
-        logger.error { "$number participant hasn't start record" }
-        throw AbsentOfStartFinishRecord(number, "start")
+        splitSplitRecordStartFinishExeption(number, "start")
     }
+}
+
+private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) {
+    logger.error { "$number participant hasn't $exception record" }
+    throw AbsentOfStartFinishRecord(number, exception)
+}
+
+private fun addSplits(number:Int, splits: List<List<String>>, start: Int, finish: Int) {
     splits.forEachIndexed { index, courseTime ->
         if (courseTime[0].toIntOrNull() == null) {
             logger.error { "Number of check point should be Int in add splitRecord" }
@@ -88,25 +88,48 @@ private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
         }
         val course = courseTime[0].toInt()
         val time = recordLocalTime(courseTime[1])
-        val groupName = participantByNumber[number]?.group
-        when (course) {
-            start -> {
-                if (time != participantStart[number]) {
-                    logger.error { "$number false start" }
-                    throw FalseStart(number)
-                }
-            }
-            finish -> {
-                resultByNumber[number] = Duration.between(participantStart[number], time)
-                updateLeader(number)
-            }
-            else -> {
-                if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
-                    logger.error { "$number wrong check point" }
-                    throw WrongCheckPoint(number)
-                }
-            }
-        }
+        checkCourses(number, course, time, index, start, finish)
+    }
+}
+
+private fun addSplitRecord(record: List<String>, start: Int, finish: Int) {
+    if (record.size <= 1) {
+        logger.error { "not enough arguments in split record" }
+        throw WrongSplit()
+    }
+    val number = getSplitNumberByRecord(record)
+    val splits = record.drop(1).filter { it != "" }.chunked(2)
+    checkSplitStartFinish(number, splits, start, finish)
+    addSplits(number, splits, start, finish)
+}
+
+private fun addSplitFinish(number: Int, time: LocalTime) {
+    resultByNumber[number] = Duration.between(participantStart[number], time)
+    updateLeader(number)
+}
+
+
+private fun checkCourses(course: Int, groupName: String?, index: Int, number: Int) {
+    if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
+        logger.error { "$number wrong check point" }
+        throw WrongCheckPoint(number)
+    }
+}
+
+
+private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int) {
+    val groupName = participantByNumber[number]?.group
+    when (course) {
+        start -> checkSplitStart(time, number)
+        finish -> addSplitFinish(number, time)
+        else -> checkCourses(course, groupName, index, number)
+    }
+}
+
+private fun checkSplitStart(time: LocalTime, number: Int) {
+    if (time != participantStart[number]) {
+        logger.error { "$number false start" }
+        throw FalseStart(number)
     }
 }
 
@@ -121,6 +144,7 @@ private fun getGap(start: Duration, finish: Duration): Duration {
     return finish - start
 }
 
+//TODO()
 private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
     val groupResults = resultByNumber.filter { (number, _) -> participantByNumber[number]?.group == groupName }
         .toList().sortedBy { it.second }.sortedBy { it.second == null }
@@ -131,10 +155,12 @@ private fun addGroupResults(groupName: String, csvPrinter: CSVPrinter) {
 
         val res = resultByNumber[number]
 
-        val place = if (res == null) null else index + 1
+        val place = if (res == null) null else index + 1 //mustn't be a place if participant doesn't have a result
 
-        val gap = if (res == null || place == 1) null else
-            getGap(resultByNumber[groupLeaders[groupName]]!!, resultByNumber[number]!!)
+        val leaderResult = resultByNumber[groupLeaders[groupName]]
+        require(leaderResult != null) { logger.error { "$number group leader is absent" }}
+        val gap = if (res == null || place == 1) null //mustn't be a gap if participant doesn't have a result or has a first place
+                  else getGap(leaderResult, res)
 
         val localTimeGap = if (gap == null) null else (LocalTime.of(0, 0) + gap).format(DateTimeFormatter.ISO_TIME)
 
