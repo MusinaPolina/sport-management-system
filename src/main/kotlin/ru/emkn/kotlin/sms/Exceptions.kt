@@ -14,6 +14,8 @@ class CantWriteInOutputFile(path: String) : MyException("$path isn't a writable 
 
 class IsNotInt(it: String) : MyException("$it must be Int")
 
+class IsNotLocalTime(it: String) : MyException("$it must be LocalTime")
+
 //class AbsentOfStartFinishRecord(number: Int, record: String) : MyException("$number hasn't $record time")
 
 class FalseStart(number: Int) : MyException("$number false start")
