@@ -14,6 +14,9 @@ class Race(list: List<CheckPoint>) {
         finish = list.last()
         checkPoints = list.dropLast(1).drop(1)
     }
+    fun time(): Duration {
+        return Duration.between(start.time, finish.time)
+    }
 }
 
 class Split(val number: Int, val race: Race?)

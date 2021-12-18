@@ -18,11 +18,13 @@ class IsNotLocalTime(it: String) : MyException("$it must be LocalTime")
 
 //class AbsentOfStartFinishRecord(number: Int, record: String) : MyException("$number hasn't $record time")
 
-class FalseStart(number: Int) : MyException("$number false start")
+//class FalseStart(number: Int) : MyException("$number false start")
 
 //class WrongCheckPoint(number: Int) : MyException("$number wrong check point")
 
 class WrongTime : MyException("Time is wrong")
+
+class AbsentOfGroupLeader(group: String) : MyException("group $group doesn't have a leader")
 
 class WrongSplit : MyException("wrong split")
 

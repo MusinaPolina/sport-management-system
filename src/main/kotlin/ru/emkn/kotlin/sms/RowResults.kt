@@ -3,10 +3,75 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.Writer
 import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
-data class ParticipantResult(val time: Duration, val place: Int, val delay: Duration?)
+class ParticipantResult {
+    val time: Duration
+    val place: Int
+    val delay: Duration?
+    constructor(time: Duration, place: Int, delay: Duration?) {
+        this.time = time
+        this.place = place
+        this.delay = delay
+    }
+    constructor(race: Race, place: Int, participant: Participant) {
+        this.time = race.time()
+        this.place = place
+        this.delay = when (place) {
+            1 -> null
+            else -> Duration.between(
+                    participant.group.leaderResult?.time?.let { LocalTime.of(0, 0, it.toSeconds().toInt()) } ?: run {
+                        logger.error { "GroupLeader is absent"}
+                        throw AbsentOfGroupLeader(participant.group.name)
+                    },
+                    LocalTime.of(0, 0, 0) + Duration.ofSeconds(race.time().toSeconds()))
+        }
+    }
 
-class RowResult(val participant: Participant, val result: ParticipantResult?) // null result - withdrawn
+    private fun durationToString(duration: Duration?): String {
+        return when (duration) {
+            null -> ""
+            else -> (LocalTime.of(0, 0) + duration).format(DateTimeFormatter.ISO_TIME)
+        }
+    }
+
+    fun toList(): List<String> {
+        return listOf(durationToString(time), place.toString(), durationToString(delay))
+    }
+}
+
+class RowResult {
+    val participant: Participant
+    val result: ParticipantResult? // null result - withdrawn
+
+    constructor(participant: Participant, result: ParticipantResult?)  {
+        this.participant = participant
+        this.result = result
+    }
+
+    constructor(participant: Participant, race: Race?, place: Int)  {
+        this.participant = participant
+        this.result = race?.let { ParticipantResult(it, place, participant) }
+    }
+
+    fun toList(): List<String> {
+        return participant.toList() + when (result) {
+            null -> listOf(WITHDRAWN)
+            else -> result.toList()
+        }
+    }
+}
+
+class ComparatorRowResult: Comparator<RowResult>{
+    override fun compare(row1: RowResult, row2: RowResult): Int {
+        return when {
+            row2.result == null -> -1
+            row1.result == null -> 1
+            else -> row1.result.time.compareTo(row2.result.time)
+        }
+    }
+}
 
 val results = mutableListOf<RowResult>()
 
@@ -26,37 +91,19 @@ class RowResults {
         }
     }
 
-    private fun getGap(start: Duration, finish: Duration): Duration {
-        return finish - start
-    }
-
     private fun addGroupResults(group: Group, csvPrinter: CSVPrinter) {
-        TODO()
-        /*val groupResults = results.filter { it.participant.group == group }
+        val groupResults = results.filter { it.participant.group == group }.sortedWith(ComparatorRowResult())
         if (groupResults.isEmpty()) {
             return
         }
-        csvPrinter.printRecord(groupName)
+        csvPrinter.printRecord(group.name)
         csvPrinter.printRecord("№ п/п","Номер", "Фамилия", "Имя", "Г.р.", "Разр", "Команда", "Результат", "Место", "Отставание")
-        groupResults.forEachIndexed { index, (number, _) ->
-            val participant = participantByNumber[number]
-            require(participant != null) { logger.error { "participant $number is null" } }
+        printGroupResults(groupResults, csvPrinter)
+    }
 
-            val res = resultByNumber[number]
-
-            val place = if (res == null) null else index + 1 //mustn't be a place if participant doesn't have a result
-
-            val leaderResult = resultByNumber[groupLeaders[groupName]]
-            require(leaderResult != null) { logger.error { "$number group leader is absent" }}
-            val gap = if (res == null || place == 1) null //mustn't be a gap if participant doesn't have a result or has a first place
-            else getGap(leaderResult, res)
-
-            val localTimeGap = if (gap == null) null else (LocalTime.of(0, 0) + gap).format(DateTimeFormatter.ISO_TIME)
-
-            csvPrinter.printRecord(index + 1, number, participant.lastName, participant.firstName,
-                participant.yearOfBirth, participant.sportsCategory, participant.team,
-                if (res != null) (LocalTime.of(0, 0) + res).format(DateTimeFormatter.ISO_TIME) else  WITHDRAWN,
-                place, localTimeGap)
-        }*/
+    private fun printGroupResults(groupResults: List<RowResult>, csvPrinter: CSVPrinter) {
+        groupResults.forEachIndexed { index, rowResult ->
+            csvPrinter.printRecord(listOf(index + 1) + rowResult.toList())
+        }
     }
 }

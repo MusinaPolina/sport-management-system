@@ -8,11 +8,10 @@ import java.time.Duration
 
 private fun parseRecord(record: List<String>, groupName: String) {
     logger.debug { "add a $groupName group's record: $record " }
-    val number = getNumberByRecord(record)
     val participant = getParticipantByRecord(record, groupName)
     val participantResult = getResultByRecord(record)
     updateLeader(participant.group, participantResult)
-    results.add(RowResult(number, participant, participantResult))
+    results.add(RowResult(participant, participantResult))
 }
 
 private const val NUMBERINDEX = 1

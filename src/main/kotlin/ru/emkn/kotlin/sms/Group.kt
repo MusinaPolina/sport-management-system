@@ -3,8 +3,32 @@ package ru.emkn.kotlin.sms
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.Reader
+import java.time.Duration
 
-data class Group(val name: String, val course: Course, var leaderResult: ParticipantResult? = null)
+class Group(val name: String, val course: Course, var leaderResult: ParticipantResult? = null) {
+    private fun participants() = participants.filter { it.group == this }
+
+    private fun sortedParticipants() = participants().associateWith {
+        splits.find { split -> split.number == it.number
+        }}.toList().sortedBy { (_, split) ->
+        split?.let { it.race?.time() ?: Duration.ofDays(1)} ?:  Duration.ofDays(1) }
+
+    private fun updateLeader() {
+        try {
+            val (participant, split) = sortedParticipants().first()
+            leaderResult = split?.race?.let { ParticipantResult(it, 1, participant) }
+        } catch (e: NoSuchElementException) {
+            return
+        }
+    }
+
+    fun computeResult() {
+        updateLeader()
+        sortedParticipants().forEachIndexed { place, (participant, split) ->
+            results.add(RowResult(participant, split?.race, place))
+        }
+    }
+}
 
 val groups = groupsParse(makeReader(rawConfig.groups)).toMutableList()
 

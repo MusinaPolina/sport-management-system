@@ -160,9 +160,18 @@ private fun splitsParse(reader: Reader) {
     csvParser.forEach { addSplitRecord(it.toList()) }
 }
 
+
+
+fun buildResults() {
+    groups.forEach {
+        it.computeResult()
+    }
+}
+
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     startTimeParse(startTimesReader)
     splitsParse(splitsReader)
    //TODO("Check races")
+    buildResults()
     RowResults().exportCSV(writer)
 }

@@ -14,6 +14,10 @@ class Participant (
         group = groups.find { it.name == groupName } ?: throw AbsentOfGroup(groupName)
         team.participants.add(this)
     }
+
+    fun toList(): List<String> {
+        return listOf(number.toString(), lastName, firstName, yearOfBirth.toString(), sportsCategory, team.name)
+    }
 }
 
 val participants = mutableListOf<Participant>()
