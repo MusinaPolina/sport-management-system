@@ -28,6 +28,8 @@ class IsNotLocalTime(it: String) : MyException("$it must be LocalTime")
 
 class WrongTime : MyException("Time is wrong")
 
+class WrongCSV(csv: String) : MyException("$csv is wrong")
+
 class AbsentOfGroupLeader(group: String) : MyException("group $group doesn't have a leader")
 
 class WrongSplit : MyException("wrong split")
