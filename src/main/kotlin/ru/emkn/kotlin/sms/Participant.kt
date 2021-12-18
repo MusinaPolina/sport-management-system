@@ -15,3 +15,5 @@ class Participant (
         team.participants.add(this)
     }
 }
+
+val participants = mutableListOf<Participant>()
