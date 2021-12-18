@@ -39,15 +39,6 @@ private fun startTimeParse(reader: Reader) {
     }
 }
 
-private fun getSplitNumberByRecord(record: List<String>): Int {
-    val recordNumber = record[NUMBERINDEX]
-    if (recordNumber.toIntOrNull() == null) {
-        logger.error { "record number $recordNumber is not Int" }
-        throw IsNotInt(recordNumber)
-    }
-    return recordNumber.toInt()
-}
-
 /*private fun updateLeader(number: Int) {
     require(participantByNumber[number] != null) { logger.error { "participant $number is null" } }
     val groupName = participantByNumber[number]?.group!!
@@ -77,27 +68,40 @@ private fun getSplitNumberByRecord(record: List<String>): Int {
     throw AbsentOfStartFinishRecord(number, exception)
 }*/
 
-fun incorrectRace(record: List<String>): Boolean {
-    if (record.size < 5) return true //number + 2 position for start and finish checkPoints
+private fun checkSplitNumberByRecord(record: List<String>) = record[NUMBERINDEX].toIntOrNull() != null
+
+private fun checkRace(record: List<String>): Boolean {
+    if (record.isEmpty()) return false
     record.drop(1).chunked(2).forEach {
         val number = it[0]
         val time = it[1]
-        try {
-            if (number.toIntOrNull() == null) throw IsNotInt(number)
-        } catch (e: MyException) {
-            return true
-        }
+        if (number.toIntOrNull() == null) return false
         try {
             LocalTime.parse(time)
         } catch (e: DateTimeParseException) {
-            return true
+            return false
         }
     }
-    return false
+    return true
 }
 
-private fun getRaceByRecord(record: List<String>): Race? {
-    if (incorrectRace(record)) return null
+private fun checkSplitRecord(record: List<String>) : Boolean {
+    return when (record.isEmpty()) {
+        true -> false
+        else -> checkSplitNumberByRecord(record) && checkRace(record)
+    }
+}
+
+private fun getSplitNumberByRecord(record: List<String>): Int {
+    val recordNumber = record[NUMBERINDEX]
+    if (recordNumber.toIntOrNull() == null) {
+        logger.error { "record number $recordNumber is not Int" }
+        throw IsNotInt(recordNumber)
+    }
+    return recordNumber.toInt()
+}
+
+private fun getRaceByRecord(record: List<String>): Race {
     return Race(record.drop(1).filter { it != "" }.chunked(2).map {
         CheckPoint(it[0].toInt(), LocalTime.parse(it[1]))
     })
@@ -155,11 +159,15 @@ private fun addSplitRecord(record: List<String>) {
     }
 }*/
 
+private fun checkParse(reader: Reader): Boolean {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
+    return csvParser.all { checkSplitRecord(it.toList()) }
+}
+
 private fun splitsParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     csvParser.forEach { addSplitRecord(it.toList()) }
 }
-
 
 
 fun buildResults() {
@@ -170,8 +178,11 @@ fun buildResults() {
 
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     startTimeParse(startTimesReader)
+  /*  if (!checkParse(splitsReader)) {
+        throw WrongCSV("splits")
+       TODO("UNCOMMENT")
+    }*/
     splitsParse(splitsReader)
-   //TODO("Check races")
     buildResults()
     RowResults().exportCSV(writer)
 }
