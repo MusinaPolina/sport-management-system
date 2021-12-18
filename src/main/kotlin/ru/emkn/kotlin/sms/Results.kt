@@ -64,7 +64,7 @@ private fun checkStartTimeHeader(header: List<String>): Boolean {
     return header == listOf("Номер","Фамилия","Имя","Г.р.","Разр","Команда","Время старта")
 }
 
-private fun startTimeCheck(reader: Reader): Boolean {
+fun checkStartTime(reader: Reader): Boolean {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     var previousGroupName = false
     return csvParser.all { record ->
@@ -133,7 +133,8 @@ private fun addSplitRecord(record: List<String>) {
     splits.add(Split(number, race))
 }
 
-private fun splitsCheck(reader: Reader): Boolean {
+
+fun checkSplits(reader: Reader): Boolean {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     return csvParser.all { checkSplitRecord(it.toList()) }
 }
