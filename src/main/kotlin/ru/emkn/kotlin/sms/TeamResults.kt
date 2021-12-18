@@ -5,6 +5,9 @@ import org.apache.commons.csv.CSVParser
 import java.io.Reader
 import java.io.Writer
 import java.time.Duration
+import java.time.LocalTime
+import java.time.format.DateTimeParseException
+import javax.swing.text.StyledEditorKit
 
 private fun parseRecord(record: List<String>, groupName: String) {
     logger.debug { "add a $groupName group's record: $record " }
@@ -12,6 +15,10 @@ private fun parseRecord(record: List<String>, groupName: String) {
     val participantResult = getResultByRecord(record)
     updateLeader(participant.group, participantResult)
     results.add(RowResult(participant, participantResult))
+}
+
+private fun checkRecord(record: List<String>): Boolean {
+    return checkParticipantByRecord(record) && checkResultByRecord(record)
 }
 
 private const val NUMBERINDEX = 1
@@ -46,13 +53,32 @@ private fun getResultByRecord(record: List<String>): ParticipantResult? {
     }
 }
 
+private fun checkResultByRecord(record: List<String>): Boolean {
+    if (record.size < RESULTINDEX) return false
+    if (record[RESULTINDEX] == WITHDRAWN) return record.drop(RESULTINDEX + 1).all { it.isEmpty() }
+
+    if (record.size < PLACEINDEX) return false
+    if (record[PLACEINDEX] == "1") return record.drop(PLACEINDEX + 1).all { it.isEmpty() }
+
+    if (record.size < DELAYINDEX) return false
+    return try {
+        LocalTime.parse(record[DELAYINDEX])
+        true
+    } catch (e: DateTimeParseException) {
+        false
+    }
+}
+
 private fun getParticipantByRecord(record: List<String>, groupName: String): Participant {
     val team = addTeam(record[6])
     return Participant(record[1].toInt(), record[3], record[2], record[4].toInt(), record[5], groupName, team)
 }
 
-private fun getNumberByRecord(record: List<String>): Int {
-    return record[NUMBERINDEX].toInt()
+private fun checkParticipantByRecord(record: List<String>): Boolean {
+    if (record.size < 7) return false
+    if (record[1].toIntOrNull() == null) return false
+    if (record[4].toIntOrNull() == null) return false
+    return true
 }
 
 private fun parseResultsProtocol(reader: Reader) {
@@ -63,6 +89,33 @@ private fun parseResultsProtocol(reader: Reader) {
             record[0] == "Протокол результатов." || record[0] == "№ п/п" -> Unit
             record.size() == 1 || record[1] == "" -> groupName = record[0]
             else -> parseRecord(record.toList(), groupName)
+        }
+    }
+}
+
+private fun checkProtocolHeader(header: List<String>): Boolean {
+    return header == listOf("№ п/п","Номер","Фамилия","Имя","Г.р.","Разр","Команда","Результат","Место","Отставание")
+}
+
+fun checkResultsProtocol(reader: Reader): Boolean {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim()).toList()
+
+    if (csvParser.isEmpty()) return false
+    if (csvParser.first().toList() != listOf("Протокол результатов.")) return false
+
+    var previousGroupName = false
+    return csvParser.drop(1).all { record ->
+        when {
+            record.toList().isEmpty() -> false
+            record.toList().size == 1 -> {
+                previousGroupName = true
+                true
+            }
+            previousGroupName -> {
+                previousGroupName = false
+                checkProtocolHeader(record.toList())
+            }
+            else -> checkRecord(record.toList())
         }
     }
 }
