@@ -10,8 +10,6 @@ class AbsentOfCourse(group: String, course: String) : MyException("course: $cour
 
 class AbsentOfGroup(group: String) : MyException("group: $group is not declared")
 
-class AbsentOfParticipant(number: Int) : MyException("participant: $number is not declared")
-
 class AbsentOfStartTime(number: Int) : MyException("start time: $number is not declared")
 
 class CantWriteInOutputFile(path: String) : MyException("$path isn't a writable file")
@@ -27,8 +25,6 @@ class IsNotLocalTime(it: String) : MyException("$it must be LocalTime")
 //class WrongCheckPoint(number: Int) : MyException("$number wrong check point")
 
 class WrongTime : MyException("Time is wrong")
-
-class WrongCSV(csv: String) : MyException("$csv is wrong")
 
 class AbsentOfGroupLeader(group: String) : MyException("group $group doesn't have a leader")
 

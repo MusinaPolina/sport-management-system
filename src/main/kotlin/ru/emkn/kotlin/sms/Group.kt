@@ -83,7 +83,7 @@ class Group(val name: String, val course: Course, var leaderResult: ParticipantR
     }
 }
 
-val groups = groupsParse(makeReader(rawConfig.groups)).toMutableList()
+val groups = groupsParse(makeReader(rawConfig.groups))
 
 private fun groupsParse(reader: Reader) : List<Group> {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT

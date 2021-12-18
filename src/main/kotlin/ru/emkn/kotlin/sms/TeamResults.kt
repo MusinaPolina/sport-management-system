@@ -3,15 +3,14 @@ package ru.emkn.kotlin.sms
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.Reader
-import java.io.Writer
 import java.time.Duration
 import java.time.LocalTime
 import java.time.format.DateTimeParseException
-import javax.swing.text.StyledEditorKit
 
 private fun parseRecord(record: List<String>, groupName: String) {
     logger.debug { "add a $groupName group's record: $record " }
     val participant = getParticipantByRecord(record, groupName)
+    participants.add(participant)
     val participantResult = getResultByRecord(record)
     updateLeader(participant.group, participantResult)
     results.add(RowResult(participant, participantResult))
@@ -81,7 +80,7 @@ private fun checkParticipantByRecord(record: List<String>): Boolean {
     return true
 }
 
-private fun parseResultsProtocol(reader: Reader) {
+fun parseResultsProtocol(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     var groupName = ""
     csvParser.forEach { record ->
@@ -118,10 +117,5 @@ fun checkResultsProtocol(reader: Reader): Boolean {
             else -> checkRecord(record.toList())
         }
     }
-}
-
-fun teamResults(reader: Reader, writer: Writer) {
-    parseResultsProtocol(reader)
-    RowTeamsResults().exportCSV(writer)
 }
 
