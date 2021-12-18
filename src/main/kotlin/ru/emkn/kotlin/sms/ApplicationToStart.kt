@@ -15,6 +15,8 @@ fun applicationsToStart (readers: List<Reader>, writer: Writer) {
     application.exportCSV(writer)
 }
 
+var lastNumber = 100
+
 class Application {
     private fun readApplication(reader: Reader) : List<Participant> {
         val csvParser = CSVParser(reader, CSVFormat.DEFAULT
@@ -65,8 +67,6 @@ class Application {
         }
         return true
     }
-
-    private var lastNumber = 100
 
     fun readApplications(readers: List<Reader>) {
         lastNumber = 100

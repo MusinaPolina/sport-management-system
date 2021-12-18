@@ -1,5 +1,6 @@
 package ru.emkn.kotlin.sms
 
+import androidx.compose.runtime.mutableStateListOf
 import java.time.Duration
 import java.time.LocalTime
 
@@ -21,5 +22,5 @@ class Race(val checkPoints: List<CheckPoint>) {
 
 class Split(val number: Int, val race: Race)
 
-val splits = mutableListOf<Split>()
-val startTimes = mutableListOf<ParticipantStartTime>()
+val splits = mutableStateListOf<Split>()
+val startTimes = mutableStateListOf<ParticipantStartTime>()

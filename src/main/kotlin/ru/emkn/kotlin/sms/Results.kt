@@ -2,7 +2,6 @@ package ru.emkn.kotlin.sms
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import java.io.Reader
-import java.io.Writer
 import java.time.LocalTime
 import java.time.format.DateTimeParseException
 
@@ -27,7 +26,7 @@ private fun getParticipantByRecord(record: List<String>, groupName: String): Par
     return Participant(record[0].toInt(), record[2], record[1], record[3].toInt(), record[4], groupName, team)
 }
 
-private fun startTimeParse(reader: Reader) {
+fun startTimeParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     var groupName = ""
     csvParser.forEach { record ->
@@ -139,7 +138,7 @@ fun checkSplits(reader: Reader): Boolean {
     return csvParser.all { checkSplitRecord(it.toList()) }
 }
 
-private fun splitsParse(reader: Reader) {
+fun splitsParse(reader: Reader) {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     csvParser.forEach { addSplitRecord(it.toList()) }
 }
@@ -148,11 +147,4 @@ fun buildResults() {
     groups.forEach {
         it.computeResult()
     }
-}
-
-fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
-    startTimeParse(startTimesReader)
-    splitsParse(splitsReader)
-    buildResults()
-    RowResults().exportCSV(writer)
 }

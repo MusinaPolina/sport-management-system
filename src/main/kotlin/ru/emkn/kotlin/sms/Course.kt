@@ -6,7 +6,7 @@ import java.io.Reader
 
 data class Course(val name: String, val checkPoints: List<Int>, val points: Int)
 
-val courses = courseParse(makeReader(rawConfig.courses)).toMutableList()
+val courses = courseParse(makeReader(rawConfig.courses))
 
 private fun courseParse(reader: Reader) : List<Course> {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT

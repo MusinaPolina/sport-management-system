@@ -1,5 +1,7 @@
 package ru.emkn.kotlin.sms
 
+import androidx.compose.runtime.mutableStateListOf
+
 class Participant (
     val number: Int,
     val firstName: String,
@@ -20,4 +22,4 @@ class Participant (
     }
 }
 
-val participants = mutableListOf<Participant>()
+val participants = mutableStateListOf<Participant>()
