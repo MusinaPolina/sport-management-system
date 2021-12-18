@@ -10,6 +10,10 @@ class AbsentOfCourse(group: String, course: String) : MyException("course: $cour
 
 class AbsentOfGroup(group: String) : MyException("group: $group is not declared")
 
+class AbsentOfParticipant(number: Int) : MyException("participant: $number is not declared")
+
+class AbsentOfStartTime(number: Int) : MyException("start time: $number is not declared")
+
 class CantWriteInOutputFile(path: String) : MyException("$path isn't a writable file")
 
 class IsNotInt(it: String) : MyException("$it must be Int")
@@ -18,11 +22,13 @@ class IsNotLocalTime(it: String) : MyException("$it must be LocalTime")
 
 //class AbsentOfStartFinishRecord(number: Int, record: String) : MyException("$number hasn't $record time")
 
-class FalseStart(number: Int) : MyException("$number false start")
+//class FalseStart(number: Int) : MyException("$number false start")
 
 //class WrongCheckPoint(number: Int) : MyException("$number wrong check point")
 
 class WrongTime : MyException("Time is wrong")
+
+class AbsentOfGroupLeader(group: String) : MyException("group $group doesn't have a leader")
 
 class WrongSplit : MyException("wrong split")
 

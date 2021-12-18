@@ -8,7 +8,7 @@ import java.time.format.DateTimeParseException
 
 private fun addParticipant(record: List<String>, groupName: String) {
     participants.add(getParticipantByRecord(record, groupName))
-    startTimes.add(CheckPoint(config.start, getStartTimeByRecord(record)))
+    startTimes.add(ParticipantStartTime(participants.last(), getStartTimeByRecord(record)))
 }
 
 private const val NUMBERINDEX = 0
@@ -160,9 +160,18 @@ private fun splitsParse(reader: Reader) {
     csvParser.forEach { addSplitRecord(it.toList()) }
 }
 
+
+
+fun buildResults() {
+    groups.forEach {
+        it.computeResult()
+    }
+}
+
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     startTimeParse(startTimesReader)
     splitsParse(splitsReader)
    //TODO("Check races")
+    buildResults()
     RowResults().exportCSV(writer)
 }
