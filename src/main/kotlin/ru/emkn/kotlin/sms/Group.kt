@@ -25,7 +25,7 @@ class Group(val name: String, val course: Course, var leaderResult: ParticipantR
     fun computeResult() {
         updateLeader()
         sortedParticipants().forEachIndexed { place, (participant, split) ->
-            results.add(RowResult(participant, split?.race, place))
+            results.add(RowResult(participant, split?.race, place + 1))
         }
     }
 }
