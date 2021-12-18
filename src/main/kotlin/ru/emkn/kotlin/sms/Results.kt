@@ -8,7 +8,7 @@ import java.time.format.DateTimeParseException
 
 private fun addParticipant(record: List<String>, groupName: String) {
     participants.add(getParticipantByRecord(record, groupName))
-    startTimes.add(CheckPoint(config.start, getStartTimeByRecord(record)))
+    startTimes.add(ParticipantStartTime(participants.last(), getStartTimeByRecord(record)))
 }
 
 private const val NUMBERINDEX = 0

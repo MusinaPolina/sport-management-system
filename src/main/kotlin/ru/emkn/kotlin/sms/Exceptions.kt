@@ -10,6 +10,10 @@ class AbsentOfCourse(group: String, course: String) : MyException("course: $cour
 
 class AbsentOfGroup(group: String) : MyException("group: $group is not declared")
 
+class AbsentOfParticipant(number: Int) : MyException("participant: $number is not declared")
+
+class AbsentOfStartTime(number: Int) : MyException("start time: $number is not declared")
+
 class CantWriteInOutputFile(path: String) : MyException("$path isn't a writable file")
 
 class IsNotInt(it: String) : MyException("$it must be Int")
