@@ -39,34 +39,50 @@ private fun startTimeParse(reader: Reader) {
     }
 }
 
-/*private fun updateLeader(number: Int) {
-    require(participantByNumber[number] != null) { logger.error { "participant $number is null" } }
-    val groupName = participantByNumber[number]?.group!!
-    if (!groupLeaders.containsKey(groupName.name) ||
-        resultByNumber[number]!! < resultByNumber[groupLeaders[groupName.name]!!]) {
-        groupLeaders[groupName.name] = number
-    }
-}*/
+private fun checkParticipant(record: List<String>): Boolean {
+    return checkParticipantByRecord(record) && checkStartTimeByRecord(record)
+}
 
-/*private fun checkSplitStartFinish(splits: List<List<String>>, start: Int, finish: Int): Boolean {
-    if (splits.isEmpty()) {
-        return true
-    }
-    if (splits.last().size == 1 || splits.last().first().toIntOrNull() != finish) {
-        return true
-        //splitSplitRecordStartFinishException(number, "finish")
-    }
-    if (splits.first().first().toIntOrNull() != start) {
-        return true
-        //splitSplitRecordStartFinishException(number, "start")
-    }
-    return false
-}*/
 
-/*private fun splitSplitRecordStartFinishExeption(number: Int, exception: String) {
-    logger.error { "$number participant hasn't $exception record" }
-    throw AbsentOfStartFinishRecord(number, exception)
-}*/
+private fun checkStartTimeByRecord(record: List<String>): Boolean {
+    return try {
+        LocalTime.parse(record[STARTTIMEINDEX])
+        true
+    } catch (e: DateTimeParseException) {
+        false
+    }
+}
+
+private fun checkParticipantByRecord(record: List<String>): Boolean {
+    if (record.size < 6) return false
+    if (record[0].toIntOrNull() == null) return false
+    if (record[3].toIntOrNull() == null) return false
+    return true
+}
+
+private fun checkStartTimeHeader(header: List<String>): Boolean {
+    return header == listOf("Номер","Фамилия","Имя","Г.р.","Разр","Команда","Время старта")
+}
+
+fun checkStartTime(reader: Reader): Boolean {
+    val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
+    var previousGroupName = false
+    return csvParser.all { record ->
+        when {
+            record.toList().isEmpty() -> false
+            record.toList().size == 1 -> {
+                previousGroupName = true
+                true
+            }
+            previousGroupName -> {
+                previousGroupName = false
+                checkStartTimeHeader(record.toList())
+            }
+            else -> checkParticipant(record.toList())
+        }
+    }
+}
+
 
 private fun checkSplitNumberByRecord(record: List<String>) = record[NUMBERINDEX].toIntOrNull() != null
 
@@ -117,49 +133,8 @@ private fun addSplitRecord(record: List<String>) {
     splits.add(Split(number, race))
 }
 
-/*private fun addSplitFinish(number: Int, time: LocalTime) {
-    resultByNumber[number] = Duration.between(participantStart[number], time)
-    updateLeader(number)
-}*/
 
-
-/*private fun checkCourses(course: Int, groupName: String, index: Int, number: Int): Boolean {
-    if (course != getCourse(groupName).checkPoints[index - 1]) {
-    //if (course != config.courseCheckPoints[config.courseByGroup[groupName]]?.get(index - 1)) {
-        logger.error { "$number wrong check point" }
-        return true
-        //throw WrongCheckPoint(number)
-    }
-    return false
-}*/
-
-
-/*private fun checkCourses(number: Int, course: Int, time: LocalTime, index: Int, start: Int, finish: Int): Boolean {
-    val groupName = participantByNumber[number]?.group?.name ?: return true
-    when (course) {
-        start -> checkSplitStart(time, number)
-        finish -> addSplitFinish(number, time)
-        else -> {
-            if (checkCourses(course, groupName, index, number)) return true
-        }
-    }
-    return false
-}*/
-
-/*    splits.find { it.number == participant.number }?.let {
-        require(it.race?.start == CheckPoint(config.start, startTime)) {
-            throw FalseStart(it.number)
-        }
-    }*/
-
-/*private fun checkSplitStart(time: LocalTime, number: Int) {
-    if (time != participantStart[number]) {
-        logger.error { "$number false start" }
-        throw FalseStart(number)
-    }
-}*/
-
-private fun checkParse(reader: Reader): Boolean {
+fun checkSplits(reader: Reader): Boolean {
     val csvParser = CSVParser(reader, CSVFormat.DEFAULT.withTrim())
     return csvParser.all { checkSplitRecord(it.toList()) }
 }
@@ -169,7 +144,6 @@ private fun splitsParse(reader: Reader) {
     csvParser.forEach { addSplitRecord(it.toList()) }
 }
 
-
 fun buildResults() {
     groups.forEach {
         it.computeResult()
@@ -178,10 +152,6 @@ fun buildResults() {
 
 fun results(startTimesReader: Reader, splitsReader: Reader, writer: Writer) {
     startTimeParse(startTimesReader)
-  /*  if (!checkParse(splitsReader)) {
-        throw WrongCSV("splits")
-       TODO("UNCOMMENT")
-    }*/
     splitsParse(splitsReader)
     buildResults()
     RowResults().exportCSV(writer)
